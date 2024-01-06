@@ -14,7 +14,7 @@ image: ${OBJS_BIN}
 #kernel.bin文件写入boot.img磁盘映像文件的第9个扇区。
 	dd if=kernel.bin of=boot.img bs=512 count=200 seek=9 conv=notrunc
 #@-表示忽略删除过程中出现的错误。
-#@-rm -rf *.bin	
+	@-rm -rf *.bin	
 
 #表示将以.asm为扩展名的汇编源文件编译为以.bin为扩展名的二进制文件。
 %.bin:%.asm

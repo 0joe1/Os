@@ -1,0 +1,98 @@
+#include "interrupt.h"
+#include "stdint.h"
+#include "io.h"
+#include "global.h"
+#include "print.h"
+
+extern gate_addr idt_desc_addr[IDT_DESC_NUMBER];
+char* int_name[IDT_DESC_NUMBER];
+gate_addr idt_table[IDT_DESC_NUMBER];
+
+static void general_intr_handler(uint_8 int_num)
+{
+    if (int_num == 0x27 || int_num == 0x2f){
+        return ;
+    }
+    put_str("int occur:0x");
+    put_int(int_num);
+    put_char('\n');
+}
+
+void exception_init(void)
+{
+    for (int i=0;i<=IDT_DESC_NUMBER;i++)
+    {
+        int_name[i] = "unknown";
+        idt_table[i] = general_intr_handler;
+    }
+    int_name[0]="#DE Divide Error";
+    int_name[1]="#DB Debug";
+    int_name[2]="NMI interrupt";
+    int_name[3]="#BP Breakpoint";
+    int_name[4]="#OF Overflow";
+    int_name[5]="#BR BOUND Range Exceeded";
+    int_name[6]="#UD Invalid Opcode";
+    int_name[7]="#NM Device not Available";
+    int_name[8]="#DF Double Fault";
+    int_name[9]="#MF CoProcessor Segment Overun";
+    int_name[10]="#TS Invalid TSS";
+    int_name[11]="#NP Segment Not Present";
+    int_name[12]="#SS Stack Segment Fault";
+    int_name[13]="#GP General Protection";
+    int_name[14]="#PF Page Fault";
+    // int_name[15] Reserved
+    int_name[16]="#MF Floating-Point Error(Math Fault)";
+    int_name[17]="#AC Alignment Check";
+    int_name[18]="#MC Machine Check";
+    int_name[19]="#XM SMID Floating-Point Exception";
+}
+
+
+void make_idt_desc(int_gate_desc* gate,uint_8 attr,gate_addr addr)
+{
+    gate->addr_low16   = (uint_32)addr& 0x0000ffff;
+    gate->selector     = SELECTOR_CODE;
+    gate->no_use       = 0;
+    gate->attribute    = attr;
+    gate->addr_high_16 = ((uint_32)addr& 0xffff0000)>>16;
+}
+
+
+void init_pic(void)
+{
+    outb(PIC_M_CTRL,0x11);
+    outb(PIC_M_DATA,0x20);
+    outb(PIC_M_DATA,0x04);
+    outb(PIC_M_DATA,0x01);
+
+    //block all except IR0
+    outb(PIC_M_DATA,0xfe);
+
+    outb(PIC_S_CTRL,0x11);
+    outb(PIC_S_DATA,0x28);
+    outb(PIC_S_DATA,0x02);
+    outb(PIC_S_DATA,0x01);
+
+    put_str("  pic init done\n");
+}
+
+void init_idt_desc(void)
+{
+    for (int i=0;i<IDT_DESC_NUMBER;i++) {
+        make_idt_desc(&gate_desc_table[i],INT_ATTR_DPL0,idt_desc_addr[i]);
+    }
+    put_str("  idt init done\n");
+}
+
+void init_all()
+{
+    init_idt_desc();
+    exception_init();
+    init_pic();
+
+    uint_64 idt_info = IDT_DESC_NUMBER*8-1;
+    idt_info |= ((uint_64)(uint_32)gate_desc_table<<16);
+    asm volatile ("lidt %0"::"m"(idt_info));
+    put_str("init all done\n");
+}
+
