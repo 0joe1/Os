@@ -64,24 +64,18 @@ global put_int
     .roll_screen
         cmp bx,2000
         jl .set_cursor
-        push ds
-        push es
         mov ax,SELECTOR_VIDEO
-        mov ds,ax
-        mov es,ax
         cld
-        mov esi,160
-        mov edi,0   ;从0开始
+        mov esi,0xc00b80a0
+        mov edi,0xc00b8000   ;从0开始
         mov ecx,960 ;每个字符占两个字节（还有属性位）
         rep movsd
-        pop ds
-        pop es
 
-        mov ecx,160
+        mov ecx,80
         mov bx,3840
     .clear
-        mov byte[bx],0x00
-        inc bx
+        mov word[gs:bx],0x0720
+        add bx,2
         loop .clear
         mov bx,1920
 

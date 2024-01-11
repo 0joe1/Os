@@ -16,6 +16,7 @@ static void general_intr_handler(uint_8 int_num)
     put_str("int occur:0x");
     put_int(int_num);
     put_char('\n');
+    return;
 }
 
 void exception_init(void)
@@ -84,7 +85,7 @@ void init_idt_desc(void)
     put_str("  idt init done\n");
 }
 
-void init_all()
+void idt_init()
 {
     init_idt_desc();
     exception_init();

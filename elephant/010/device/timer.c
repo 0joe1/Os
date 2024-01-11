@@ -13,8 +13,8 @@ static void frequency_set(uint_8 counter_no,uint_8 counter_port, \
 
 void timer_init()
 {
-    put_str("init timer");
+    put_str("init timer\n");
     frequency_set(COUNTER0_NO,COUNTER0_PORT,\
                   RW_LH,COUNTER_MODE2,COUNTER0_COUNT_NUM);
-    put_str("init timer done");
+    put_str("init timer done\n");
 }

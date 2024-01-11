@@ -23,7 +23,7 @@ static int_gate_desc gate_desc_table[IDT_DESC_NUMBER];
 void make_idt_desc(int_gate_desc* ,uint_8 ,gate_addr );
 void init_pic(void);
 void init_idt_desc(void);
-void init_all(void);
+void idt_init(void);
 
 
 #endif

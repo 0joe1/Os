@@ -37,7 +37,7 @@ $(BUILD)/%.o: $(LIBK)/%.S
 $(BUILD)/%.o: $(KERNEL)/%.S
 	nasm $(ASFLAGS)  $^ -o $@
 $(BUILD)/%.o: $(KERNEL)/%.c
-	gcc  $(CFLAGS) -I $(LIBK)/ -I $(KERNEL) $^ -o $@
+	gcc  $(CFLAGS) -I $(DEVICE)/ -I $(LIBK)/ -I $(KERNEL) $^ -o $@
 $(BUILD)/%.o: $(DEVICE)/%.c
 	gcc  $(CFLAGS) -I $(KERNEL)/ -I $(LIBK)/ -I $(KERNEL) $^ -o $@
 
