@@ -1,5 +1,6 @@
 BUILD   := build
 KERNEL  := kernel
+DEVICE 	:= device
 LIBK    := lib/kernel
 LIBU    := lib/usr
 
@@ -24,7 +25,7 @@ image: ${OBJS_BIN}
 	@-rm -rf *.bin	
   
 OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
-		 $(BUILD)/print.o $(BUILD)/kernel.o
+		 $(BUILD)/print.o $(BUILD)/kernel.o $(BUILD)/timer.o
 
 build: ${OBJS_O}
 	ld -m elf_i386 -T kernel.ld $(OBJS_O)  -o $(BUILD)/kernel.bin
@@ -37,6 +38,8 @@ $(BUILD)/%.o: $(KERNEL)/%.S
 	nasm $(ASFLAGS)  $^ -o $@
 $(BUILD)/%.o: $(KERNEL)/%.c
 	gcc  $(CFLAGS) -I $(LIBK)/ -I $(KERNEL) $^ -o $@
+$(BUILD)/%.o: $(DEVICE)/%.c
+	gcc  $(CFLAGS) -I $(KERNEL)/ -I $(LIBK)/ -I $(KERNEL) $^ -o $@
 
 #gdb_symbol:
 #	objcopy --only-keep-debug $(BUILD)/kernel.bin $(BUILD)/kernel.sym
