@@ -9,6 +9,9 @@
 #define PIC_S_CTRL 0xa0
 #define PIC_S_DATA 0xa1
 
+#define EFLAG_IF 0x200
+#define GEFLAGS(ef) asm volatile("pushfl ; popl %0":"=g"(ef))
+
 typedef void* gate_addr;
 typedef struct {
     uint_16 addr_low16;
@@ -17,6 +20,14 @@ typedef struct {
     uint_8  attribute;
     uint_16 addr_high_16;
 }int_gate_desc;
+
+enum intr_status{
+    INTR_OFF,
+    INTR_ON
+};
+enum intr_status get_intr_status();
+enum intr_status intr_enable();
+enum intr_status intr_disable();
 
 static int_gate_desc gate_desc_table[IDT_DESC_NUMBER];
 

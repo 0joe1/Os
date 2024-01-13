@@ -4,9 +4,12 @@ DEVICE 	:= device
 LIBK    := lib/kernel
 LIBU    := lib/usr
 
+LIB     = -I lib/ -I $(LIBK)/ -I $(LIBU) -I $(KERNEL) -I $(DEVICE)
+
 #LDFALGS := -Ttext 0xc0001500 -e main
 ASFLAGS = -f elf -w-orphan-label -g
-CFLAGS  = -c -fno-builtin -m32 -fno-stack-protector -g
+CFLAGS  = -Wall $(LIB) -c -fno-builtin -m32 -fno-stack-protector \
+		  -W -Wstrict-prototypes -Wmissing-prototypes -g
 
 OBJS_BIN=mbr.bin loader.bin $(BUILD)/kernel.bin
 
@@ -25,24 +28,47 @@ image: ${OBJS_BIN}
 	@-rm -rf *.bin	
   
 OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
-		 $(BUILD)/print.o $(BUILD)/kernel.o $(BUILD)/timer.o
+		 $(BUILD)/print.o $(BUILD)/kernel.o $(BUILD)/timer.o \
+		 $(BUILD)/debug.o
 
-build: ${OBJS_O}
-	ld -m elf_i386 -T kernel.ld $(OBJS_O)  -o $(BUILD)/kernel.bin
 
+################# 汇编代码编译 ####################
 %.bin:%.asm
 	nasm -I include/ $^ -o $@
 $(BUILD)/%.o: $(LIBK)/%.S
-	nasm $(ASFLAGS)  $^ -o $@
+	nasm $(ASFLAGS) $^ -o $@
 $(BUILD)/%.o: $(KERNEL)/%.S
-	nasm $(ASFLAGS)  $^ -o $@
-$(BUILD)/%.o: $(KERNEL)/%.c
-	gcc  $(CFLAGS) -I $(DEVICE)/ -I $(LIBK)/ -I $(KERNEL) $^ -o $@
-$(BUILD)/%.o: $(DEVICE)/%.c
-	gcc  $(CFLAGS) -I $(KERNEL)/ -I $(LIBK)/ -I $(KERNEL) $^ -o $@
+	nasm $(ASFLAGS) $^ -o $@
+
+
+################# C代码编译 ####################
+$(BUILD)/main.o: kernel/main.c lib/kernel/print.h \
+				 lib/stdint.h kernel/init.h
+	$(CC) $(CFLAGS) $< -o $@
+$(BUILD)/init.o: kernel/init.c kernel/init.h lib/kernel/print.h \
+				 lib/stdint.h kernel/interrupt.h device/timer.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/interrupt.o: kernel/interrupt.c kernel/interrupt.h \
+					  lib/stdint.h kernel/global.h lib/kernel/io.h lib/kernel/print.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/timer.o: device/timer.c device/timer.h lib/stdint.h \
+				  lib/kernel/io.h lib/kernel/print.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/debug.o: kernel/debug.c kernel/debug.h \
+				  lib/kernel/print.h lib/stdint.h kernel/interrupt.h
+	$(CC) $(CFLAGS) $< -o $@
+
+################ 链接所有目标文件 ###################
+$(BUILD)/kernel.bin: $(OBJS_O)
+	ld -m elf_i386 -T kernel.ld $(OBJS_O)  -o $(BUILD)/kernel.bin
 
 #gdb_symbol:
 #	objcopy --only-keep-debug $(BUILD)/kernel.bin $(BUILD)/kernel.sym
+
+build: $(BUILD)/kernel.bin
 
 #定义了一个名为run的目标
 run:

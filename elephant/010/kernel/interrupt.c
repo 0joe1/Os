@@ -97,3 +97,29 @@ void idt_init()
     put_str("init all done\n");
 }
 
+enum intr_status get_intr_status()
+{
+    uint_32 eflags;
+    GEFLAGS(eflags);
+    return eflags & EFLAG_IF? INTR_ON : INTR_OFF;
+}
+
+
+enum intr_status intr_enable()
+{
+    enum intr_status old_status = get_intr_status();
+    if (old_status == INTR_OFF){
+        asm volatile("sti": : :"cc");
+    }
+    return old_status;
+}
+
+enum intr_status intr_disable()
+{
+    enum intr_status old_status = get_intr_status();
+    if (old_status == INTR_ON){
+        asm volatile("cli": : :"cc");
+    }
+    return old_status;
+}
+
