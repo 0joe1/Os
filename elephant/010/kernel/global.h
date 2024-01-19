@@ -16,4 +16,6 @@
 #define INT_ATTR_DPL0 ((DESC_P<<7)+(DPL_0<<5)+INT_DESC_TYPE)
 #define INT_ATTR_DPL3 ((DESC_P<<7)+(DPL_3<<5)+INT_DESC_TYPE)
 
+/**********************other************************/
+
 #endif

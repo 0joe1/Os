@@ -10,6 +10,8 @@ LIB     = -I lib/ -I $(LIBK)/ -I $(LIBU) -I $(KERNEL) -I $(DEVICE)
 ASFLAGS = -f elf -w-orphan-label -g
 CFLAGS  = -Wall $(LIB) -c -fno-builtin -m32 -fno-stack-protector \
 		  -W -Wstrict-prototypes -Wmissing-prototypes -g
+GDB_SETTING = gdbstub:enabled=1,port=1234,text_base=0,data_base=0,bss_base=0
+GDB_CONNECT = "target remote localhost:1234"
 
 OBJS_BIN=mbr.bin loader.bin $(BUILD)/kernel.bin
 
@@ -29,7 +31,8 @@ image: ${OBJS_BIN}
   
 OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/print.o $(BUILD)/kernel.o $(BUILD)/timer.o \
-		 $(BUILD)/debug.o
+		 $(BUILD)/debug.o $(BUILD)/bitmap.o $(BUILD)/memory.o \
+		 $(BUILD)/string.o
 
 
 ################# 汇编代码编译 ####################
@@ -46,7 +49,8 @@ $(BUILD)/main.o: kernel/main.c lib/kernel/print.h \
 				 lib/stdint.h kernel/init.h
 	$(CC) $(CFLAGS) $< -o $@
 $(BUILD)/init.o: kernel/init.c kernel/init.h lib/kernel/print.h \
-				 lib/stdint.h kernel/interrupt.h device/timer.h
+				 lib/stdint.h kernel/interrupt.h device/timer.h \
+				 kernel/memory.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD)/interrupt.o: kernel/interrupt.c kernel/interrupt.h \
@@ -61,21 +65,36 @@ $(BUILD)/debug.o: kernel/debug.c kernel/debug.h \
 				  lib/kernel/print.h lib/stdint.h kernel/interrupt.h
 	$(CC) $(CFLAGS) $< -o $@
 
+$(BUILD)/string.o: lib/string.c lib/string.h \
+				   kernel/debug.h kernel/global.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/bitmap.o: kernel/bitmap.c kernel/bitmap.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/memory.o: kernel/memory.c kernel/memory.h lib/kernel/print.h\
+				   kernel/bitmap.h
+	$(CC) $(CFLAGS) $< -o $@
+
 ################ 链接所有目标文件 ###################
 $(BUILD)/kernel.bin: $(OBJS_O)
 	ld -m elf_i386 -T kernel.ld $(OBJS_O)  -o $(BUILD)/kernel.bin
 
-#gdb_symbol:
-#	objcopy --only-keep-debug $(BUILD)/kernel.bin $(BUILD)/kernel.sym
+gdb_symbol:
+	objcopy --only-keep-debug $(BUILD)/kernel.bin $(BUILD)/kernel.sym
 
 build: $(BUILD)/kernel.bin
 
 #定义了一个名为run的目标
-run:
-	make build
-	make gdb_symbol
+run:build
 	make image
 	/home/username/bochs2.6/bin/bochs -f bochsrc.disk
+
+run_gdb:build
+	make gdb_symbol
+	make image
+	/home/username/bochs-gdb/bin/bochs -qf bochsrc.disk	$(GDB_SETTING) 
+	gdb $(BUILD)/kernel.bin  -ex $(GDB_CONNECT)
 
 
 clean:

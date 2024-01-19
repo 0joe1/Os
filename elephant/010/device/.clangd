@@ -1,5 +1,6 @@
  CompileFlags:
   Add:
+    - -I../lib
     - -I../lib/kernel
     - -I../kernel
     - -m32
