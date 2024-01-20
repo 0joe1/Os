@@ -3,14 +3,22 @@
 #include "io.h"
 #include "debug.h"
 #include "memory.h"
+#include "thread.h"
+
+void thread1(void*);
+
 int main(void){
     put_str("kernel starting...\n");
     init();
-    void* addr = get_kernel_pages(3);
-    put_str("\n get kernel page start vaddr is ");
-    put_int((uint_32)addr);
-    put_str("\n");
+
+    thread_start("thread1",31,thread1,"argA ");
     //asm volatile("sti"); 
     while(1);
     return 0;
+}
+void thread1(void* arg)
+{
+    while (1){
+        put_str((char*)arg);
+    }
 }

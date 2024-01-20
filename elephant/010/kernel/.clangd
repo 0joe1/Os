@@ -1,5 +1,6 @@
  CompileFlags:
   Add:
+    - -I../thread
     - -I../lib
     - -I../lib/kernel
     - -I../device

@@ -3,8 +3,9 @@ KERNEL  := kernel
 DEVICE 	:= device
 LIBK    := lib/kernel
 LIBU    := lib/usr
+THREAD  := thread
 
-LIB     = -I lib/ -I $(LIBK)/ -I $(LIBU) -I $(KERNEL) -I $(DEVICE)
+LIB     = -I lib/ -I $(LIBK)/ -I $(LIBU) -I $(KERNEL) -I $(DEVICE) -I $(THREAD)
 
 #LDFALGS := -Ttext 0xc0001500 -e main
 ASFLAGS = -f elf -w-orphan-label -g
@@ -32,7 +33,7 @@ image: ${OBJS_BIN}
 OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/print.o $(BUILD)/kernel.o $(BUILD)/timer.o \
 		 $(BUILD)/debug.o $(BUILD)/bitmap.o $(BUILD)/memory.o \
-		 $(BUILD)/string.o
+		 $(BUILD)/string.o $(BUILD)/thread.o
 
 
 ################# 汇编代码编译 ####################
@@ -74,6 +75,9 @@ $(BUILD)/bitmap.o: kernel/bitmap.c kernel/bitmap.h
 
 $(BUILD)/memory.o: kernel/memory.c kernel/memory.h lib/kernel/print.h\
 				   kernel/bitmap.h
+	$(CC) $(CFLAGS) $< -o $@
+$(BUILD)/thread.o: thread/thread.c thread/thread.h kernel/memory.h \
+				   lib/string.h lib/stdint.h
 	$(CC) $(CFLAGS) $< -o $@
 
 ################ 链接所有目标文件 ###################
