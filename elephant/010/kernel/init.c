@@ -3,10 +3,12 @@
 #include "print.h"
 #include "init.h"
 #include "memory.h"
+#include "thread.h"
 void init()
 {
     put_str("init all\n");
     idt_init();
     mem_init();
+    thread_init();
     timer_init();
 }

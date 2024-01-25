@@ -4,4 +4,5 @@
 void put_char(uint_8 c);
 void put_str(char* str);
 void put_int(uint_32 i);
+void set_cursor(uint_16 pos);
 #endif

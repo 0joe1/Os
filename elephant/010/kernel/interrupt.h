@@ -28,6 +28,7 @@ enum intr_status{
 enum intr_status get_intr_status();
 enum intr_status intr_enable();
 enum intr_status intr_disable();
+void intr_set_status(enum intr_status);
 
 static int_gate_desc gate_desc_table[IDT_DESC_NUMBER];
 
@@ -35,6 +36,7 @@ void make_idt_desc(int_gate_desc* ,uint_8 ,gate_addr );
 void init_pic(void);
 void init_idt_desc(void);
 void idt_init(void);
+void register_handler(uint_8 int_num,gate_addr function);
 
 
 #endif

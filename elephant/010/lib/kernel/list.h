@@ -2,6 +2,9 @@
 #define LIB_KERNEL_LIST_H
 #include "stdint.h"
 
+#define offset(struct_type,member) (uint_32)(&((struct_type*)0)->member)
+#define mem2entry(struct_type,mem_addr,member) (struct_type*)((uint_32)mem_addr-offset(struct_type,member))
+
 struct list_elm {
     struct list_elm* prev;
     struct list_elm* next;

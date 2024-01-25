@@ -17,6 +17,7 @@ void list_insert_before(struct list_elm* before,struct list_elm* elm)
     elm->prev = before->prev;
     elm->next = before;
     before->prev = elm;
+    intr_set_status(old_status);
 }
 
 void list_push(struct list* plist,struct list_elm* elm)

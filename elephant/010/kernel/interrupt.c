@@ -13,9 +13,17 @@ static void general_intr_handler(uint_8 int_num)
     if (int_num == 0x27 || int_num == 0x2f){
         return ;
     }
-    put_str("int occur:0x");
-    put_int(int_num);
-    put_char('\n');
+    set_cursor(0);
+    put_str("!!!!!!!!!!!   exception message begin !!!!!!!!!!!!!!!\n");
+    put_str(int_name[int_num]);put_str("             ");put_char('\n');
+    if (int_num == 14){
+        uint_32 vaddr;
+        asm volatile("movl %%cr2,%0":"=g"(vaddr));
+        //page Fault 异常出现时导致出错的虚拟地址会被加载到cr2中
+        put_int(vaddr);put_str(" has no corresponding paddr     \n");
+    }
+    put_str("!!!!!!!!!!!   exception message end   !!!!!!!!!!!!!!!\n");
+    while(1);
     return;
 }
 
@@ -123,3 +131,12 @@ enum intr_status intr_disable()
     return old_status;
 }
 
+void intr_set_status(enum intr_status status)
+{
+    status & INTR_ON ?intr_enable():intr_disable();
+}
+
+void register_handler(uint_8 int_num,gate_addr function)
+{
+    idt_table[int_num] = function; 
+}

@@ -10,6 +10,7 @@ section .text
 global put_char
 global put_str
 global put_int
+global set_cursor
 
     put_char:
         pushad
@@ -167,3 +168,32 @@ global put_int
     .out
         popad
         ret
+
+;------------------------------------------------------------
+set_cursor
+    push ebp
+    push ebx
+    push edi
+    push esi
+
+    mov bx,[esp+0x14]
+    mov dx,0x3d4
+    mov al,0xe
+    out dx,al
+    inc dx
+    mov al,bh
+    out dx,al
+
+    mov dx,0x3d4
+    mov al,0xf
+    out dx,al
+    inc dx
+    mov al,bl
+    out dx,al
+
+    pop esi
+    pop edi
+    pop ebx
+    pop ebp
+    ret
+

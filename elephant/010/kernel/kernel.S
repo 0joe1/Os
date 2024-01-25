@@ -19,13 +19,14 @@
         push gs
         pushad
 
-        push %1
-        call [idt_table+%1*4]
-        add esp,4
-
+        ;若这个不放在前面的话，后面switch没ret到这里导致中断不发生
         mov al,0x20
         out 0x20,al
         out 0xa0,al
+
+        push %1
+        call [idt_table+%1*4]
+        add esp,4
 
         jmp int_exit
 
