@@ -14,11 +14,11 @@ int main(void){
     put_str("kernel starting...\n");
     init();
 
-    thread_start("thread1",31,thread1,"argA ");
-    thread_start("thread2",8,thread1,"argB ");
+    //thread_start("thread1",31,thread1,"argA ");
+    //thread_start("thread2",8,thread1,"argB ");
     intr_enable();
     while(1){
-        console_put_str("main ");
+        //console_put_str("main ");
     }
     return 0;
 }

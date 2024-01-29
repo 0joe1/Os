@@ -15,6 +15,7 @@ static void general_intr_handler(uint_8 int_num)
     }
     set_cursor(0);
     put_str("!!!!!!!!!!!   exception message begin !!!!!!!!!!!!!!!\n");
+    put_str("int_num:0x");put_int(int_num);put_str("  ");
     put_str(int_name[int_num]);put_str("             ");put_char('\n');
     if (int_num == 14){
         uint_32 vaddr;

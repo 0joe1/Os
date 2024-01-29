@@ -5,6 +5,7 @@
 #include "memory.h"
 #include "thread.h"
 #include "console.h"
+#include "keyboard.h"
 void init()
 {
     put_str("init all\n");
@@ -13,4 +14,5 @@ void init()
     thread_init();
     timer_init();
     console_init();
+    keyboard_init();
 }

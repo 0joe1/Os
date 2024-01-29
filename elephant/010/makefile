@@ -34,7 +34,8 @@ OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/print.o $(BUILD)/kernel.o $(BUILD)/timer.o \
 		 $(BUILD)/debug.o $(BUILD)/bitmap.o $(BUILD)/memory.o \
 		 $(BUILD)/string.o $(BUILD)/switch.o $(BUILD)/list.o \
-		 $(BUILD)/sync.o $(BUILD)/console.o $(BUILD)/thread.o
+		 $(BUILD)/sync.o $(BUILD)/console.o $(BUILD)/thread.o \
+		 $(BUILD)/keyboard.o
 
 
 ################# 汇编代码编译 ####################
@@ -96,6 +97,9 @@ $(BUILD)/console.o: device/console.c device/console.h \
 					lib/stdint.h
 	$(CC) $(CFLAGS) $< -o $@
 
+$(BUILD)/keyboard.o: device/keyboard.c device/keyboard.h lib/kernel/io.h \
+					 lib/kernel/print.h kernel/interrupt.h
+	$(CC) $(CFLAGS) $< -o $@
 ################ 链接所有目标文件 ###################
 $(BUILD)/kernel.bin: $(OBJS_O)
 	ld -m elf_i386 -T kernel.ld $(OBJS_O)  -o $(BUILD)/kernel.bin
