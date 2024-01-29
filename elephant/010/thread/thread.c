@@ -15,7 +15,7 @@ struct list thread_ready_list;
 struct list all_thread_list;
 
 void kernel_thread(thread_func* func,void* arg){
-    intr_enable();
+    intr_enable();   //没有iret，EFLAG未恢复，需手动置位IF
     func(arg);
 }
 
@@ -71,10 +71,6 @@ void schedule(void)
         cur->status = TASK_READY;
         list_append(&thread_ready_list,&cur->wait_tag);
     }
-    else
-    {
-        //阻塞，以后再实现
-    }
 
     struct list_elm* next_ready_tag = list_pop(&thread_ready_list);
     struct task_struct* next = mem2entry(struct task_struct,next_ready_tag,wait_tag);
@@ -103,4 +99,34 @@ void thread_init(void)
     make_main_thread();
     put_str("thread init done\n");
 }
+
+void thread_block(enum task_status stat)
+{
+    enum intr_status old_status = intr_disable();
+    ASSERT(stat==TASK_BLOCKED || \
+           stat==TASK_WAITING || \
+           stat==TASK_HANGING );
+
+    struct task_struct* cur = (struct task_struct*)running_thread();
+    ASSERT(cur->status==TASK_RUNNING);
+    cur->status = stat;
+    schedule();
+    intr_set_status(old_status);
+}
+
+void thread_unblock(struct task_struct* thread)
+{
+    enum intr_status old_status = intr_disable();
+    ASSERT(thread->status==TASK_BLOCKED || \
+           thread->status==TASK_WAITING || \
+           thread->status==TASK_HANGING );
+
+    thread->status = TASK_READY;
+    if (elem_find(&thread_ready_list,&thread->wait_tag)) {
+        PANIC("thread unblock: already in thread ready list");
+    }
+    list_push(&thread_ready_list,&thread->wait_tag);
+    intr_set_status(old_status);
+}
+
 

@@ -9,9 +9,11 @@ typedef void thread_func(void*);
 
 enum task_status{
     TASK_RUNNING,
-    TASK_BLOCKED,
     TASK_READY,
-    TASK_DIED
+    TASK_BLOCKED,
+    TASK_WAITING,
+    TASK_HANGING,
+    TASK_DIED,
 };
 
 
@@ -69,5 +71,7 @@ void* running_thread(void);
 void schedule(void);
 void make_main_thread(void);
 void thread_init(void);
+void thread_block(enum task_status stat);
+void thread_unblock(struct task_struct* pcb);
 
 #endif

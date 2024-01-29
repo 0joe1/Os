@@ -34,7 +34,7 @@ OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/print.o $(BUILD)/kernel.o $(BUILD)/timer.o \
 		 $(BUILD)/debug.o $(BUILD)/bitmap.o $(BUILD)/memory.o \
 		 $(BUILD)/string.o $(BUILD)/switch.o $(BUILD)/list.o \
-		 $(BUILD)/thread.o
+		 $(BUILD)/sync.o $(BUILD)/console.o $(BUILD)/thread.o
 
 
 ################# 汇编代码编译 ####################
@@ -86,6 +86,14 @@ $(BUILD)/thread.o: thread/thread.c thread/thread.h kernel/memory.h \
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD)/list.o: lib/kernel/list.c lib/kernel/list.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/sync.o: thread/sync.c thread/sync.h lib/stdint.h \
+				 lib/kernel/list.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/console.o: device/console.c device/console.h \
+					lib/stdint.h
 	$(CC) $(CFLAGS) $< -o $@
 
 ################ 链接所有目标文件 ###################

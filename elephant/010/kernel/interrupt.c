@@ -29,7 +29,7 @@ static void general_intr_handler(uint_8 int_num)
 
 void exception_init(void)
 {
-    for (int i=0;i<=IDT_DESC_NUMBER;i++)
+    for (int i=0;i<IDT_DESC_NUMBER;i++)
     {
         int_name[i] = "unknown";
         idt_table[i] = general_intr_handler;
@@ -75,7 +75,7 @@ void init_pic(void)
     outb(PIC_M_DATA,0x01);
 
     //block all except IR0
-    outb(PIC_M_DATA,0xfe);
+    outb(PIC_M_DATA,0xfd);
 
     outb(PIC_S_CTRL,0x11);
     outb(PIC_S_DATA,0x28);
