@@ -35,7 +35,7 @@ global set_cursor
         cmp cl,0x8
         jz .backspace
         cmp cl,0xd
-        jz .CR
+        jz .LF
         cmp cl,0xa
         jz .LF
 
