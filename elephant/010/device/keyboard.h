@@ -26,5 +26,6 @@
 #define caps_make 0x3a
 
 void keyboard_init(void);
+extern struct ioqueue kbd_buf;
 
 #endif

@@ -35,7 +35,7 @@ OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/debug.o $(BUILD)/bitmap.o $(BUILD)/memory.o \
 		 $(BUILD)/string.o $(BUILD)/switch.o $(BUILD)/list.o \
 		 $(BUILD)/sync.o $(BUILD)/console.o $(BUILD)/thread.o \
-		 $(BUILD)/keyboard.o
+		 $(BUILD)/keyboard.o $(BUILD)/ioqueue.o
 
 
 ################# 汇编代码编译 ####################
@@ -99,6 +99,10 @@ $(BUILD)/console.o: device/console.c device/console.h \
 
 $(BUILD)/keyboard.o: device/keyboard.c device/keyboard.h lib/kernel/io.h \
 					 lib/kernel/print.h kernel/interrupt.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/ioqueue.o: device/ioqueue.c device/ioqueue.h lib/stdint.h thread/thread.h \
+					thread/sync.h
 	$(CC) $(CFLAGS) $< -o $@
 ################ 链接所有目标文件 ###################
 $(BUILD)/kernel.bin: $(OBJS_O)

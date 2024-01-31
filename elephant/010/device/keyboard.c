@@ -2,9 +2,12 @@
 #include "print.h"
 #include "interrupt.h"
 #include "io.h"
+#include "ioqueue.h"
 
 #define KDB_BUF_PORT 0x60
 #define IS_DOUBLECHAR(code) ((code<0x0e)||(code==0x29)||(code==0x1a)||(code==0x1b)||(code==0x2b)||(code==0x33)||(code==0x27)||(code==0x28)||(code==0x34)||(code==0x35))
+
+struct ioqueue kbd_buf;
 
 static Bool ctrl_l_status,ctrl_r_status,ctrl_status;
 static Bool shift_l_status,shift_r_status,shift_status;
@@ -97,7 +100,6 @@ static void intr_keyboard_handler(void)
         ext_status = 1;
         return ;
     }
-
     if (ext_status == 1)
     {
         scancode = (0xe0<<8 | scancode);
@@ -126,7 +128,10 @@ static void intr_keyboard_handler(void)
         uint_8 index = scancode;
         char cur_char = keymap[index][shift];
         if (cur_char) {
-            put_char(cur_char);
+            if (!ioq_full(&kbd_buf)){
+                put_char(cur_char);
+                ioq_putchar(&kbd_buf,cur_char);
+            }
             return ;
         }
 
@@ -144,6 +149,7 @@ static void intr_keyboard_handler(void)
 void keyboard_init(void)
 {
     put_str("keyboard init start\n");
+    ioq_init(&kbd_buf);
     register_handler(0x21,intr_keyboard_handler);
     put_str("keyboard init done\n");
 }

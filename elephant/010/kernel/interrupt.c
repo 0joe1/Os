@@ -76,7 +76,7 @@ void init_pic(void)
     outb(PIC_M_DATA,0x01);
 
     //block all except IR0
-    outb(PIC_M_DATA,0xfd);
+    outb(PIC_M_DATA,0xfc);
 
     outb(PIC_S_CTRL,0x11);
     outb(PIC_S_DATA,0x28);
