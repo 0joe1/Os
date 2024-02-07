@@ -6,6 +6,9 @@
 #include "thread.h"
 #include "console.h"
 #include "keyboard.h"
+#include "global.h" 
+#include "tss.h"
+
 void init()
 {
     put_str("init all\n");
@@ -15,4 +18,5 @@ void init()
     timer_init();
     console_init();
     keyboard_init();
+    tss_init();
 }

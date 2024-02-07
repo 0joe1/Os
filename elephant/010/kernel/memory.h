@@ -1,6 +1,7 @@
 #ifndef KERNEL_MEMORY_H
 #define KERNEL_MEMORY_H
 #include "bitmap.h"
+#include "sync.h"
 
 struct virt_addr {
     struct bitmap btmp;
@@ -11,6 +12,7 @@ struct pool {
     struct bitmap btmp;
     uint_32 paddr_start;
     uint_32 pool_size;
+    struct lock lock;
 };
 
 enum pool_flag {
@@ -27,5 +29,7 @@ uint_32* pde_ptr(uint_32 vaddr);
 static void page_table_add(void* _vaddr,void* _paddr);
 void* malloc_page(enum pool_flag pf,uint_32 pcnt);
 void* get_kernel_pages(uint_32 pcnt);
+void* get_a_page(enum pool_flag,uint_32 vaddr);
+uint_32 v2p(void* vaddr);
 
 #endif

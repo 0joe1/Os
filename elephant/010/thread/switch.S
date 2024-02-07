@@ -9,8 +9,7 @@ global switch_to
         mov [eax],esp
         ;----------- next thread -----------
         mov eax,[esp+0x18]
-        mov ebx,[eax]
-        mov esp,ebx
+        mov esp,[eax]
 
         pop esi
         pop edi

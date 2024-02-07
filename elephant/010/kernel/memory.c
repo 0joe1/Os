@@ -2,6 +2,8 @@
 #include "string.h"
 #include "print.h"
 #include "debug.h"
+#include "thread.h"
+#include "sync.h"
 
 #define PAGE_SIZE 4096
 #define BTMP_START 0xc009a000
@@ -34,12 +36,14 @@ void mem_pool_init(uint_32 total_mem)
     kernel_pool.btmp.map_size = kbm_len;
     kernel_pool.paddr_start = used_mem;
     kernel_pool.pool_size = ker_free_pages * PAGE_SIZE;
+    lock_init(&kernel_pool.lock);
 
     uint_32 ubm_len = usr_free_pages / 8;
     user_pool.btmp.bits = (uint_8*)(BTMP_START + kbm_len);
     user_pool.btmp.map_size = ubm_len;
     user_pool.paddr_start = used_mem + ker_free_pages*PAGE_SIZE;
     user_pool.pool_size = usr_free_pages * PAGE_SIZE;
+    lock_init(&user_pool.lock);
 
     bit_init(&kernel_pool.btmp);
     bit_init(&user_pool.btmp);
@@ -91,7 +95,7 @@ static void* get_vaddr(enum pool_flag pf,uint_32 pcnt)
 
         uint_32 cnt = 0;
         while (cnt < pcnt){
-            bitmap_set(&ker_vaddr.btmp,cnt++,1);
+            bitmap_set(&ker_vaddr.btmp,bit_start+cnt++,1);
         }
         vaddr_get = ker_vaddr.vaddr_start + bit_start*PAGE_SIZE;
     }
@@ -176,4 +180,41 @@ void* get_kernel_pages(uint_32 pcnt)
     if (vaddr != NULL)
         memset(vaddr,0,PAGE_SIZE*pcnt);
     return vaddr;
+}
+
+void* get_a_page(enum pool_flag pf,uint_32 vaddr)
+{
+    struct pool* m_pool = pf==PF_KERNEL? &kernel_pool : &user_pool;
+    lock_acquire(&m_pool->lock);
+
+    struct task_struct* cur = running_thread();
+    if (pf == PF_KERNEL && cur->pdir == NULL)
+    {
+        uint_32 bit_idx = (vaddr - ker_vaddr.vaddr_start)/PAGESIZE;
+        bitmap_set(&ker_vaddr.btmp,bit_idx,1);
+    }
+    else if (pf == PF_USER && cur->pdir != NULL)
+    {
+        uint_32 bit_idx = (vaddr - cur->usrprog_vaddr.vaddr_start)/PAGESIZE;
+        bitmap_set(&cur->usrprog_vaddr.btmp,bit_idx,1);
+    }
+    else {
+        PANIC("get a page");
+    }
+
+    void* paddr = palloc(m_pool);
+    if (paddr == NULL){
+        return NULL;
+    }
+    page_table_add((void*)vaddr,paddr);
+    lock_release(&m_pool->lock);
+    return (void*)vaddr;
+}
+
+
+uint_32 v2p(void* vaddr)
+{
+    uint_32 vr = (uint_32)vaddr;
+    uint_32* pte = pte_ptr(vr);
+    return ((*pte&0xfffff000) | (vr&0xfff));
 }

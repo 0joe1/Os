@@ -6,10 +6,9 @@
 #include "interrupt.h"
 #include "switch.h"
 #include "print.h"
+#include "process.h"
 
-#define PAGESIZE 4096
 #define MAIN_THREAD_PRIO 31
-
 
 struct list thread_ready_list;
 struct list all_thread_list;
@@ -23,7 +22,7 @@ void* running_thread()
 {
     uint_32 pcb_addr;
     asm volatile("movl %%esp,%0":"=g"(pcb_addr));
-    return (void*)(pcb_addr & 0xfffff000);
+    return (void*)((pcb_addr-1) & 0xfffff000);
 }
 void init_thread(struct task_struct* pcb,char* name,uint_32 priority)
 {
@@ -74,6 +73,7 @@ void schedule(void)
 
     struct list_elm* next_ready_tag = list_pop(&thread_ready_list);
     struct task_struct* next = mem2entry(struct task_struct,next_ready_tag,wait_tag);
+    process_activate(next);
     next->status = TASK_RUNNING;
     switch_to(cur,next);
 }

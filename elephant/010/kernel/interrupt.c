@@ -61,7 +61,7 @@ void exception_init(void)
 void make_idt_desc(int_gate_desc* gate,uint_8 attr,gate_addr addr)
 {
     gate->addr_low16   = (uint_32)addr& 0x0000ffff;
-    gate->selector     = SELECTOR_CODE;
+    gate->selector     = SELECTOR_K_CODE;
     gate->no_use       = 0;
     gate->attribute    = attr;
     gate->addr_high_16 = ((uint_32)addr& 0xffff0000)>>16;

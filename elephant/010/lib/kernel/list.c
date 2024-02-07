@@ -1,6 +1,7 @@
 #include "list.h"
 #include "string.h"
 #include "interrupt.h"
+#include "print.h"
 
 void list_init(struct list* list)
 {
@@ -8,6 +9,18 @@ void list_init(struct list* list)
     list->head.next = &list->tail;
     list->tail.prev = &list->head;
     list->tail.next = NULL;
+}
+
+void show_list(struct list* list)
+{
+    struct list_elm* p = &list->head;
+    while (p != &list->tail){
+        put_int((uint_32)p);
+        if (p != NULL){
+            put_str(" -> ");
+            p = p->next;
+        }
+    }
 }
 
 void list_insert_before(struct list_elm* before,struct list_elm* elm)

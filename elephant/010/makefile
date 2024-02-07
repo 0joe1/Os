@@ -1,12 +1,13 @@
-BUILD   := build
-KERNEL  := kernel
-DEVICE 	:= device
-LIBK    := lib/kernel
-LIBU    := lib/usr
-THREAD  := thread
+BUILD    := build
+KERNEL   := kernel
+DEVICE 	 := device
+LIBK     := lib/kernel
+LIBU     := lib/usr
+THREAD   := thread
+USERPROG := userprog
 
 LIB     = -I lib/ -I $(LIBK)/ -I $(LIBU) -I $(KERNEL) -I $(DEVICE) -I $(THREAD) \
-
+		  -I $(USERPROG)
 #LDFALGS := -Ttext 0xc0001500 -e main
 ASFLAGS = -f elf -w-orphan-label -g
 CFLAGS  = -Wall $(LIB) -c -fno-builtin -m32 -fno-stack-protector \
@@ -35,8 +36,8 @@ OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/debug.o $(BUILD)/bitmap.o $(BUILD)/memory.o \
 		 $(BUILD)/string.o $(BUILD)/switch.o $(BUILD)/list.o \
 		 $(BUILD)/sync.o $(BUILD)/console.o $(BUILD)/thread.o \
-		 $(BUILD)/keyboard.o $(BUILD)/ioqueue.o
-
+		 $(BUILD)/keyboard.o $(BUILD)/ioqueue.o $(BUILD)/tss.o \
+		 $(BUILD)/process.o
 
 ################# 汇编代码编译 ####################
 %.bin:%.asm
@@ -59,7 +60,8 @@ $(BUILD)/init.o: kernel/init.c kernel/init.h lib/kernel/print.h \
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD)/interrupt.o: kernel/interrupt.c kernel/interrupt.h \
-					  lib/stdint.h kernel/global.h lib/kernel/io.h lib/kernel/print.h
+					  lib/stdint.h kernel/global.h lib/kernel/io.h \
+					  lib/kernel/print.h thread/thread.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD)/timer.o: device/timer.c device/timer.h lib/stdint.h \
@@ -104,6 +106,14 @@ $(BUILD)/keyboard.o: device/keyboard.c device/keyboard.h lib/kernel/io.h \
 $(BUILD)/ioqueue.o: device/ioqueue.c device/ioqueue.h lib/stdint.h thread/thread.h \
 					thread/sync.h
 	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/tss.o: userprog/tss.c userprog/tss.h kernel/global.h lib/kernel/print.h \
+				thread/thread.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/process.o: userprog/process.c userprog/process.h
+	$(CC) $(CFLAGS) $< -o $@
+
 ################ 链接所有目标文件 ###################
 $(BUILD)/kernel.bin: $(OBJS_O)
 	ld -m elf_i386 -T kernel.ld $(OBJS_O)  -o $(BUILD)/kernel.bin
@@ -126,5 +136,5 @@ run_gdb:build
 
 
 clean:
-	rm -rf *.img  *.out *.lock *.bin *.o kernel/*.o lib/kernel/*.o
+	rm -rf *.img  *.out *.lock *.bin *.o kernel/*.o lib/kernel/*.o $(BUILD)/*.o
 .PHONY:clean image build gdb_symbol

@@ -2,8 +2,13 @@
 #define THREAD_H
 #include "list.h"
 #include "stdint.h"
+#include "memory.h"
 
+#define PAGESIZE 4096
 #define KMAGIC 0x54878290  //防止栈破坏信息
+
+extern struct list thread_ready_list;
+extern struct list all_thread_list;
 
 typedef void thread_func(void*);
 
@@ -36,7 +41,7 @@ struct intr_stack{
     void (*eip)(void);
     uint_32 cs;
     uint_32 eflags;
-    uint_32 esp;
+    void* esp;
     uint_32 ss;
 };
 
@@ -61,6 +66,8 @@ struct task_struct {
     uint_32 elapsed_ticks;
     enum task_status status;
     uint_32 priority;
+    void* pdir;
+    struct virt_addr usrprog_vaddr;
     uint_32 kmagic;
 };
 

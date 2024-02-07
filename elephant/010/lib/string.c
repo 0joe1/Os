@@ -1,6 +1,5 @@
 #include "string.h"
 #include "debug.h"
-#include "global.h"
 
 void memset(void* dst_,uint_8 value,uint_32 size)
 {

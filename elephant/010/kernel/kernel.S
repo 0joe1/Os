@@ -26,7 +26,6 @@
 
         push %1
         call [idt_table+%1*4]
-        add esp,4
 
         jmp int_exit
 
@@ -38,6 +37,7 @@
 section .text
 global int_exit
 int_exit:
+    add esp,4  ;为了配合intr_stack,放在这里了
     popad
     pop gs
     pop fs
