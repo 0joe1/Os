@@ -7,11 +7,23 @@
 #include "switch.h"
 #include "print.h"
 #include "process.h"
+#include "sync.h"
 
 #define MAIN_THREAD_PRIO 31
 
 struct list thread_ready_list;
 struct list all_thread_list;
+
+struct lock pid_lock;
+pid_t sys_pid;
+
+void asign_pid(struct task_struct* pcb)
+{
+    lock_acquire(&pid_lock);
+    sys_pid++;
+    pcb->pid = sys_pid;
+    lock_release(&pid_lock);
+}
 
 void kernel_thread(thread_func* func,void* arg){
     intr_enable();   //没有iret，EFLAG未恢复，需手动置位IF
@@ -28,6 +40,7 @@ void init_thread(struct task_struct* pcb,char* name,uint_32 priority)
 {
     pcb->kstack_p = (void*)((uint_32)pcb + PAGESIZE);
     strcpy((char*)pcb->name,name);
+    asign_pid(pcb);
     pcb->priority = priority;
     pcb->ticks    = priority;
     pcb->elapsed_ticks = 0;
@@ -82,6 +95,7 @@ void make_main_thread()
 {
     struct task_struct* main_pcb = running_thread();
     strcpy((char*)main_pcb->name,"main thread");
+    asign_pid(main_pcb);
     main_pcb->kstack_p = (void*)((uint_32)main_pcb + PAGESIZE);
     main_pcb->status = TASK_RUNNING;
     main_pcb->priority = MAIN_THREAD_PRIO;
@@ -94,6 +108,7 @@ void make_main_thread()
 void thread_init(void)
 {
     put_str("thread init start\n");
+    lock_init(&pid_lock);
     list_init(&all_thread_list);
     list_init(&thread_ready_list);
     make_main_thread();

@@ -5,6 +5,7 @@
 #include "print.h"
 
 extern gate_addr idt_desc_addr[IDT_DESC_NUMBER];
+extern uint_32 syscall_handler(void);
 char* int_name[IDT_DESC_NUMBER];
 gate_addr idt_table[IDT_DESC_NUMBER];
 
@@ -91,6 +92,7 @@ void init_idt_desc(void)
     for (int i=0;i<IDT_DESC_NUMBER;i++) {
         make_idt_desc(&gate_desc_table[i],INT_ATTR_DPL0,idt_desc_addr[i]);
     }
+    make_idt_desc(&gate_desc_table[0x80],INT_ATTR_DPL3,syscall_handler);
     put_str("  idt init done\n");
 }
 

@@ -7,6 +7,7 @@
 
     extern put_str  ;利用extern引入外部符号
     extern idt_table 
+    extern syscall_table
 
     %macro VECTOR 2
 
@@ -35,9 +36,29 @@
     %endmacro
 
 section .text
+global syscall_handler
+syscall_handler:
+    push 0
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+    push 0x80 ;占位而已，0x80实际没意义，与前面压中断号保持队形罢了
+    
+    push ebx
+    push ecx
+    push edx
+    call [syscall_table + eax*4]
+    add esp,12
+
+    mov [esp+0x20],eax
+    jmp int_exit
+
+section .text
 global int_exit
 int_exit:
-    add esp,4  ;为了配合intr_stack,放在这里了
+    add esp,4  ;跳过压入的中断号，为了配合intr_stack,放在这里了
     popad
     pop gs
     pop fs

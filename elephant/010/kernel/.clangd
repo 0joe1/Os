@@ -3,6 +3,8 @@
     - -I../thread
     - -I../lib
     - -I../lib/kernel
-    - -I../device
+    - -I../lib/usr
     - -I../userprog
+    - -I../device
     - -m32
+

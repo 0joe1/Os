@@ -2,7 +2,7 @@
 #define INTERRUPT_H
 #include "stdint.h"
 
-#define IDT_DESC_NUMBER 0x31
+#define IDT_DESC_NUMBER 0x81
 
 #define PIC_M_CTRL 0x20
 #define PIC_M_DATA 0x21

@@ -8,6 +8,7 @@
 #include "keyboard.h"
 #include "global.h" 
 #include "tss.h"
+#include "syscall-init.h"
 
 void init()
 {
@@ -19,4 +20,5 @@ void init()
     console_init();
     keyboard_init();
     tss_init();
+    syscall_init();
 }
