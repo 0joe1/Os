@@ -1,4 +1,6 @@
 #include "syscall.h"
+#include "console.h"
+#include "string.h"
 
 #define _syscall0(NUMBER) ({\
         int retval;         \
@@ -43,3 +45,8 @@
 uint_32 getpid(void) {
     return _syscall0(SYS_GETPID);
 }
+
+uint_32 write(char* str) {
+    return _syscall1(SYS_WRITE,str);
+}
+

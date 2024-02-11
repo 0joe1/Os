@@ -3,4 +3,5 @@
     - -I../lib/kernel
     - -I../kernel
     - -I../device
+    - -I./usr
     - -m32

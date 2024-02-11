@@ -37,7 +37,8 @@ OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/string.o $(BUILD)/switch.o $(BUILD)/list.o \
 		 $(BUILD)/sync.o $(BUILD)/console.o $(BUILD)/thread.o \
 		 $(BUILD)/keyboard.o $(BUILD)/ioqueue.o $(BUILD)/tss.o \
-		 $(BUILD)/process.o  $(BUILD)/syscall-init.o $(BUILD)/syscall.o 
+		 $(BUILD)/process.o  $(BUILD)/syscall-init.o $(BUILD)/syscall.o \
+		 $(BUILD)/stdio.o
 
 ################# 汇编代码编译 ####################
 %.bin:%.asm
@@ -118,6 +119,10 @@ $(BUILD)/syscall-init.o: userprog/syscall-init.c lib/usr/syscall.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD)/syscall.o: lib/usr/syscall.c lib/usr/syscall.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/stdio.o: lib/stdio.c lib/stdio.h kernel/debug.h lib/string.h \
+				  lib/usr/syscall.h
 	$(CC) $(CFLAGS) $< -o $@
 
 ################ 链接所有目标文件 ###################
