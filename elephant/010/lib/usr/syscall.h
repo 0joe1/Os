@@ -4,10 +4,14 @@
 
 enum SYSCALL {
     SYS_GETPID,
-    SYS_WRITE
+    SYS_WRITE,
+    SYS_MALLOC,
+    SYS_FREE
 };
 
 uint_32 getpid(void);
 uint_32 write(char*);
+void* malloc(uint_32 size);
+void free(void* ptr);
 
 #endif

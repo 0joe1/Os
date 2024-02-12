@@ -26,6 +26,7 @@ void usr_vaddr_init(struct task_struct* pcb)
     usr_vaddr->btmp.bits     = get_kernel_pages(btmp_pgsize);
     usr_vaddr->btmp.map_size = (0xc0000000-USR_VADDR_START)/PAGESIZE/8;
     bit_init(&pcb->usrprog_vaddr.btmp);
+    block_desc_init(pcb->usr_block_desc);
 }
 
 void process_execute(char* name,void* filename)

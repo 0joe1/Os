@@ -71,6 +71,7 @@ struct task_struct {
     uint_32 priority;
     void* pdir;
     struct virt_addr usrprog_vaddr;
+    struct mem_block_desc usr_block_desc[DESC_CNT];
     uint_32 kmagic;
 };
 

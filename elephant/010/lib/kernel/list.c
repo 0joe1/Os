@@ -49,6 +49,7 @@ void list_remove(struct list_elm* elm)
     
     elm->prev->next = elm->next;
     elm->next->prev = elm->prev;
+    intr_set_status(old_status);
 }
 
 struct list_elm* list_pop(struct list* plist)

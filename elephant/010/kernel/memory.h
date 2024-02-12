@@ -2,6 +2,14 @@
 #define KERNEL_MEMORY_H
 #include "bitmap.h"
 #include "sync.h"
+#include "list.h"
+
+#define DESC_CNT 7
+
+enum pool_flag {
+    PF_KERNEL,
+    PF_USER
+};
 
 struct virt_addr {
     struct bitmap btmp;
@@ -15,9 +23,20 @@ struct pool {
     struct lock lock;
 };
 
-enum pool_flag {
-    PF_KERNEL,
-    PF_USER
+struct mem_block {
+    struct list_elm elm;
+};
+
+struct mem_block_desc {
+    uint_32 block_size;
+    uint_32 blocks_per_arena;
+    struct list free_list;
+};
+
+struct arena {
+    struct mem_block_desc* blk_desc;
+    uint_32 cnt;
+    Bool large;
 };
 
 
@@ -31,5 +50,13 @@ void* malloc_page(enum pool_flag pf,uint_32 pcnt);
 void* get_kernel_pages(uint_32 pcnt);
 void* get_a_page(enum pool_flag,uint_32 vaddr);
 uint_32 v2p(void* vaddr);
+void block_desc_init(struct mem_block_desc*);
+struct mem_block* arena2block(struct arena* arena,uint_32 idx);
+struct arena* block2arena(struct mem_block* blk);
+void* sys_malloc(uint_32 size);
+void remove_pte(void* vaddr);
+void vfree(enum pool_flag pf,void* vaddr,uint_32 pcnt);
+void mfree_page(enum pool_flag,void* _vaddr,uint_32 pcnt);
+void sys_free(void* ptr);
 
 #endif

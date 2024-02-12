@@ -50,3 +50,11 @@ uint_32 write(char* str) {
     return _syscall1(SYS_WRITE,str);
 }
 
+void* malloc(uint_32 size) {
+    return (void*)_syscall1(SYS_MALLOC,size);
+}
+
+void free(void* ptr) {
+    _syscall1(SYS_FREE,ptr);
+}
+
