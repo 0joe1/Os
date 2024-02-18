@@ -1,5 +1,6 @@
 #ifndef TIMER_H
 #define TIMER_H
+#include "stdint.h"
 
 #define WORK_FREQUENCY 1193180
 #define IRQ0_SIG_FREQUENCY 100
@@ -11,5 +12,6 @@
 #define RW_LH 3
 
 void timer_init(void);
+void sleep_ms(uint_32 ms);
 
 #endif

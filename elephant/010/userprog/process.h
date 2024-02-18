@@ -1,12 +1,12 @@
 #ifndef USERPROG_PROCESS_H
 #define USERPROG_PROCESS_H
 #include "thread.h"
+#include "global.h"
 
 #define DEFALT_PRI 31
 
 #define USR_STACK_VADDR (0xc0000000-1000)
 #define USR_VADDR_START 0x8048000
-#define DIV_ROUND_UP(divd,divs) ((divd+divs-1)/divs)
 
 void start_process(void* arg);
 void create_page_dir(struct task_struct* pcb);

@@ -9,6 +9,7 @@
 #include "global.h" 
 #include "tss.h"
 #include "syscall-init.h"
+#include "ide.h"
 
 void init()
 {
@@ -21,4 +22,5 @@ void init()
     keyboard_init();
     tss_init();
     syscall_init();
+    ide_init();
 }

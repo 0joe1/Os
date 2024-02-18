@@ -1,6 +1,7 @@
 #ifndef LIB_STDIO_H
 #define LIB_STDIO_H
 #include "stdint.h"
+#include "string.h"
 
 #define _INTSIZEOF(n)  ((sizeof(n) + sizeof(int)-1) & ~(sizeof(int)-1))
 #define va_list char*

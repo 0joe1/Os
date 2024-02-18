@@ -17,7 +17,7 @@ static inline uint_8 inb(uint_16 port) {
 }
 
 static inline void insw(uint_16 port,void* buf,uint_32 wcnt) {
-    asm volatile ("insw %%dx,%%esi":"+S"(buf):"d"(port),"a"(wcnt):"memory");
+    asm volatile("cld; rep insw;":"+D"(buf),"+c"(wcnt):"d"(port):"memory");
 }
 
 #endif

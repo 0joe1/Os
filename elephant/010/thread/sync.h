@@ -14,7 +14,7 @@ struct lock {
     uint_32 acquire_nr;
 };
 
-void seme_init(struct semaphore*);
+void sema_init(struct semaphore*,uint_8);
 void sema_down(struct semaphore*);
 void sema_up(struct semaphore*);
 void lock_init(struct lock*);

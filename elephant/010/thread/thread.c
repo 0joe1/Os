@@ -17,6 +17,8 @@ struct list all_thread_list;
 struct lock pid_lock;
 pid_t sys_pid;
 
+struct task_struct* idle_pcb;
+
 void asign_pid(struct task_struct* pcb)
 {
     lock_acquire(&pid_lock);
@@ -60,7 +62,7 @@ void thread_create(struct task_struct* pcb,thread_func* func,void* arg)
     thread->esi = thread->edi = thread->ebp = thread->ebx = 0;
 }
 
-void thread_start(char* name,uint_32 priority,thread_func* func,void* arg)
+struct task_struct* thread_start(char* name,uint_32 priority,thread_func* func,void* arg)
 {
     void* pcb_addr = get_kernel_pages(1);
     struct task_struct* pcb = (struct task_struct*)pcb_addr;
@@ -69,6 +71,7 @@ void thread_start(char* name,uint_32 priority,thread_func* func,void* arg)
 
     list_append(&all_thread_list,&pcb->all_list_tag);
     list_append(&thread_ready_list,&pcb->wait_tag);
+    return pcb_addr;
 }
 
 void schedule(void)
@@ -84,6 +87,7 @@ void schedule(void)
         list_append(&thread_ready_list,&cur->wait_tag);
     }
 
+    if (list_empty(&thread_ready_list)) thread_unblock(idle_pcb);
     struct list_elm* next_ready_tag = list_pop(&thread_ready_list);
     struct task_struct* next = mem2entry(struct task_struct,next_ready_tag,wait_tag);
     process_activate(next);
@@ -112,6 +116,7 @@ void thread_init(void)
     list_init(&all_thread_list);
     list_init(&thread_ready_list);
     make_main_thread();
+    idle_pcb = thread_start("idle",10,idle,NULL);
     put_str("thread init done\n");
 }
 
@@ -144,4 +149,21 @@ void thread_unblock(struct task_struct* thread)
     intr_set_status(old_status);
 }
 
+void idle(void* arg)
+{
+    while (1) {
+        thread_block(TASK_BLOCKED);
+        asm volatile("sti;hlt;":::"cc");
+    }
+}
+
+void thread_yield(void)
+{
+    struct task_struct* cur = running_thread();
+    enum intr_status old_status = intr_disable();
+    cur->status = TASK_READY;
+    list_append(&thread_ready_list,&cur->wait_tag);
+    schedule();
+    intr_set_status(old_status);
+}
 

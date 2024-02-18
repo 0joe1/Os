@@ -38,7 +38,7 @@ OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/sync.o $(BUILD)/console.o $(BUILD)/thread.o \
 		 $(BUILD)/keyboard.o $(BUILD)/ioqueue.o $(BUILD)/tss.o \
 		 $(BUILD)/process.o  $(BUILD)/syscall-init.o $(BUILD)/syscall.o \
-		 $(BUILD)/stdio.o
+		 $(BUILD)/stdio.o $(BUILD)/ide.o $(BUILD)/stdio-kernel.o
 
 ################# 汇编代码编译 ####################
 %.bin:%.asm
@@ -125,6 +125,15 @@ $(BUILD)/stdio.o: lib/stdio.c lib/stdio.h kernel/debug.h lib/string.h \
 				  lib/usr/syscall.h
 	$(CC) $(CFLAGS) $< -o $@
 
+$(BUILD)/ide.o: device/ide.c device/ide.h thread/sync.h lib/stdio.h \
+				kernel/global.h kernel/debug.h lib/kernel/io.h \
+				kernel/interrupt.h device/timer.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/stdio-kernel.o: lib/kernel/stdio-kernel.c lib/kernel/stdio-kernel.h
+	$(CC) $(CFLAGS) $< -o $@
+
+
 ################ 链接所有目标文件 ###################
 $(BUILD)/kernel.bin: $(OBJS_O)
 	ld -m elf_i386 -T kernel.ld $(OBJS_O)  -o $(BUILD)/kernel.bin
@@ -147,5 +156,5 @@ run_gdb:build
 
 
 clean:
-	rm -rf *.img  *.out *.lock *.bin *.o kernel/*.o lib/kernel/*.o $(BUILD)/*.o
+	rm -rf  *.out *.lock *.bin *.o kernel/*.o lib/kernel/*.o $(BUILD)/*.o
 .PHONY:clean image build gdb_symbol

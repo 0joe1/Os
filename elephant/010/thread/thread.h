@@ -61,7 +61,7 @@ struct thread_stack {
 
 struct task_struct {
     uint_32* kstack_p;
-    char* name[20];
+    char name[20];
     pid_t pid;
     struct list_elm wait_tag;
     struct list_elm all_list_tag;
@@ -78,12 +78,14 @@ struct task_struct {
 void asign_pid(struct task_struct* pcb);
 void init_thread(struct task_struct* pcb,char* name,uint_32 priority);
 void thread_create(struct task_struct* pcb,thread_func* func,void* arg);
-void thread_start(char* name,uint_32 priority,thread_func* func,void* arg);
+struct task_struct* thread_start(char* name,uint_32 priority,thread_func* func,void* arg);
 void* running_thread(void);
 void schedule(void);
 void make_main_thread(void);
 void thread_init(void);
 void thread_block(enum task_status stat);
 void thread_unblock(struct task_struct* pcb);
+void idle(void* arg);
+void thread_yield(void);
 
 #endif

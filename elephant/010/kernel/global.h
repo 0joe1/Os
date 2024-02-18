@@ -68,4 +68,5 @@ struct gdt_desc {
     uint_8  seg_high_base;
 };
 
+#define DIV_ROUND_UP(divd,divs) ((divd+divs-1)/divs)
 #endif

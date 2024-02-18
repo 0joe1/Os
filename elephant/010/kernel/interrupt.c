@@ -12,6 +12,7 @@ gate_addr idt_table[IDT_DESC_NUMBER];
 static void general_intr_handler(uint_8 int_num)
 {
     if (int_num == 0x27 || int_num == 0x2f){
+        put_str("general_intr_handler");
         return ;
     }
     set_cursor(0);
@@ -76,13 +77,14 @@ void init_pic(void)
     outb(PIC_M_DATA,0x04);
     outb(PIC_M_DATA,0x01);
 
-    //block all except IR0
-    outb(PIC_M_DATA,0xfc);
+    outb(PIC_M_DATA,0xf8);
 
     outb(PIC_S_CTRL,0x11);
     outb(PIC_S_DATA,0x28);
     outb(PIC_S_DATA,0x02);
     outb(PIC_S_DATA,0x01);
+
+    outb(PIC_S_DATA,0x3f);
 
     put_str("  pic init done\n");
 }

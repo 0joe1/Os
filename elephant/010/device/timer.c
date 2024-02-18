@@ -5,6 +5,9 @@
 #include "interrupt.h"
 #include "thread.h"
 #include "debug.h"
+#include "global.h"
+
+#define MS_PER_TICK (1000 / IRQ0_SIG_FREQUENCY)
 
 uint_32 ticks;
 
@@ -36,4 +39,15 @@ void timer_init()
                   RW_LH,COUNTER_MODE2,COUNTER0_COUNT_NUM);
     register_handler(0x20,intr_timer_handler);
     put_str("init timer done\n");
+}
+
+void sleep_ms(uint_32 ms)
+{
+    enum intr_status old_status = intr_enable();
+    uint_32 pass_ticks = DIV_ROUND_UP(ms,MS_PER_TICK);
+    uint_32 end_tick = ticks + pass_ticks;
+    while (ticks < end_tick) {
+        thread_yield();
+    }
+    intr_set_status(old_status);
 }
