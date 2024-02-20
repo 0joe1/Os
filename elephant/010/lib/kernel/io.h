@@ -7,7 +7,7 @@ static inline void outb(uint_16 port,uint_8 data){
 }
 
 static inline void outsw(uint_16 port,void* buf,uint_32 wcnt){
-    asm volatile ("outsw %%dx,%%edi":"+D"(buf):"d"(port),"a"(wcnt):"memory");
+    asm volatile ("cld; rep outsw;":"+S"(buf),"+c"(wcnt):"d"(port));
 }
 
 static inline uint_8 inb(uint_16 port) {
