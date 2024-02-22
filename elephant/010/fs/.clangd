@@ -1,0 +1,9 @@
+ CompileFlags:
+  Add:
+    - -I../device
+    - -I../thread
+    - -I../lib
+    - -I../lib/kernel
+    - -I../kernel
+    - -m32
+    - -Werror

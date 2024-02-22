@@ -6,5 +6,6 @@
     - -I../lib/usr
     - -I../userprog
     - -I../device
+    - -I../fs
     - -m32
 

@@ -5,9 +5,10 @@ LIBK     := lib/kernel
 LIBU     := lib/usr
 THREAD   := thread
 USERPROG := userprog
+FS       := fs
 
 LIB     = -I lib/ -I $(LIBK)/ -I $(LIBU) -I $(KERNEL) -I $(DEVICE) -I $(THREAD) \
-		  -I $(USERPROG)
+		  -I $(USERPROG) -I $(FS)
 #LDFALGS := -Ttext 0xc0001500 -e main
 ASFLAGS = -f elf -w-orphan-label -g
 CFLAGS  = -Wall $(LIB) -c -fno-builtin -m32 -fno-stack-protector \
@@ -28,6 +29,8 @@ image: ${OBJS_BIN}
 	dd if=loader.bin of=boot.img bs=512 count=3 seek=2 conv=notrunc
 #kernel.bin文件写入boot.img磁盘映像文件的第9个扇区。
 	dd if=$(BUILD)/kernel.bin of=boot.img bs=512 count=200 seek=9 conv=notrunc
+#创建 hd80M.img
+	cp hd80M.bak hd80M.img
 #@-表示忽略删除过程中出现的错误。
 	@-rm -rf *.bin	
   
@@ -38,7 +41,8 @@ OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/sync.o $(BUILD)/console.o $(BUILD)/thread.o \
 		 $(BUILD)/keyboard.o $(BUILD)/ioqueue.o $(BUILD)/tss.o \
 		 $(BUILD)/process.o  $(BUILD)/syscall-init.o $(BUILD)/syscall.o \
-		 $(BUILD)/stdio.o $(BUILD)/ide.o $(BUILD)/stdio-kernel.o
+		 $(BUILD)/stdio.o $(BUILD)/ide.o $(BUILD)/stdio-kernel.o \
+		 $(BUILD)/fs.o
 
 ################# 汇编代码编译 ####################
 %.bin:%.asm
@@ -133,6 +137,9 @@ $(BUILD)/ide.o: device/ide.c device/ide.h thread/sync.h lib/stdio.h \
 $(BUILD)/stdio-kernel.o: lib/kernel/stdio-kernel.c lib/kernel/stdio-kernel.h
 	$(CC) $(CFLAGS) $< -o $@
 
+$(BUILD)/fs.o: fs/fs.c fs/fs.h kernel/global.h kernel/debug.h device/ide.h \
+			   kernel/memory.h fs/dir.h fs/inode.h userprog/syscall-init.h
+	$(CC) $(CFLAGS) $< -o $@
 
 ################ 链接所有目标文件 ###################
 $(BUILD)/kernel.bin: $(OBJS_O)

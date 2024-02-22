@@ -69,4 +69,5 @@ struct gdt_desc {
 };
 
 #define DIV_ROUND_UP(divd,divs) ((divd+divs-1)/divs)
+#define MAX(a,b) (a>b?a:b)
 #endif
