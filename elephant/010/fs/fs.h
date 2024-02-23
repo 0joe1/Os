@@ -10,8 +10,10 @@
 #define BITS_PER_SECTOR (BYTES_PER_SECTOR*8)
 
 extern struct channel channel[];
+extern struct list partition_list;
 
 void fs_format(struct partition*);
 void fs_init(void);
+Bool mount_partition(struct list_elm* pt_elm,int arg);
 
 #endif

@@ -30,7 +30,7 @@ image: ${OBJS_BIN}
 #kernel.bin文件写入boot.img磁盘映像文件的第9个扇区。
 	dd if=$(BUILD)/kernel.bin of=boot.img bs=512 count=200 seek=9 conv=notrunc
 #创建 hd80M.img
-	cp hd80M.bak hd80M.img
+	#cp hd80M.bak hd80M.img
 #@-表示忽略删除过程中出现的错误。
 	@-rm -rf *.bin	
   

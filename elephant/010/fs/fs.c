@@ -5,6 +5,9 @@
 #include "string.h"
 #include "dir.h"
 #include "debug.h"
+#include "list.h"
+
+struct partition* cur_part;
 
 void fs_format(struct partition* p)
 {
@@ -125,4 +128,45 @@ void fs_init(void)
         }
     }
     sys_free(sb);
+
+    char default_part[8] = "sdb1";
+    list_traversal(&partition_list,mount_partition,(int)default_part);
 }
+
+Bool mount_partition(struct list_elm* pt_elm,int arg)
+{
+    char* part_name = (char*)arg;
+    struct partition* pt = mem2entry(struct partition,pt_elm,part_elm);
+    if (strcmp(pt->name,part_name)) {
+        printk("false:%s\n",pt->name);
+        return false;
+    }
+
+    cur_part = pt;
+    cur_part->sb = sys_malloc(BYTES_PER_SECTOR);    
+    if (cur_part->sb == NULL) {
+        PANIC("mount_partition alloc memory failed");
+    }
+    ide_read(pt->hd,cur_part->sb,pt->start_sec+1,1);
+  
+    struct super_block* sb = cur_part->sb;
+    /* block bitmap */
+    cur_part->block_bitmap.map_size = sb->block_bitmap_sects*BYTES_PER_SECTOR;
+    cur_part->block_bitmap.bits = sys_malloc(cur_part->block_bitmap.map_size);
+    if (cur_part->block_bitmap.bits == NULL) {
+        PANIC("mount_partition alloc memory failed");
+    }
+
+    /* inode */
+    cur_part->inode_bitmap.map_size = sb->inode_bitmap_sects*BYTES_PER_SECTOR;
+    cur_part->inode_bitmap.bits = sys_malloc(cur_part->inode_bitmap.map_size);
+    if (cur_part->inode_bitmap.bits == NULL) {
+        PANIC("mount_partition alloc memory failed");
+    }
+    list_init(&cur_part->open_inodes);
+
+    printk("mount %s done!\n",cur_part->name);
+    return true;
+}
+
+

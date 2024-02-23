@@ -4,5 +4,6 @@
     - -I../lib
     - -I../lib/kernel
     - -I../kernel
+    - -I../fs
     - -m32
     - -Werror

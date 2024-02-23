@@ -2,14 +2,19 @@
 #define DEVICE_IDE_H
 #include "stdint.h"
 #include "sync.h"
+#include "memory.h"
 
 #define max_lba ((80*1024*1024/512) - 1)
 
 struct partition {
     char name[17];
     struct disk* hd;
+    struct super_block* sb;
     uint_32 start_sec;
     uint_32 sec_cnt;
+    struct bitmap block_bitmap;
+    struct bitmap inode_bitmap;
+    struct list open_inodes;
     struct list_elm part_elm;
 };
 struct disk {
