@@ -1,4 +1,5 @@
 #include "fs.h"
+#include "thread.h"
 #include "global.h"
 #include "stdio-kernel.h"
 #include "memory.h"
@@ -324,4 +325,22 @@ int_32 sys_open(const char* filename,uint_8 flag)
     return fd;
 }
 
+int_32 fdlocal2gloabl(int_32 local_fd)
+{
+    struct task_struct* cur = running_thread();
+    int_32 _fd = cur->fd_table[local_fd];
+    return _fd;
+}
+
+int_32 sys_close(int_32 fd)
+{
+    int_32 _fd = fdlocal2gloabl(fd);
+    free_inode(file_table[_fd].inode);
+    file_table[_fd].inode = NULL;
+    struct task_struct* cur = running_thread();
+    cur->fd_table[fd] = -1;
+    printk("fd %d closed\n",fd);
+
+    return 0;
+}
 
