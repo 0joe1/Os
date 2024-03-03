@@ -3,17 +3,42 @@
 #include "ide.h"
 #include "super_block.h"
 #include "inode.h"
+#include "dir.h"
 
 #define LINFSMAGIC 0x27308192
 #define MFILES_PER_PARTITION 4096
 #define BYTES_PER_SECTOR 512
 #define BITS_PER_SECTOR (BYTES_PER_SECTOR*8)
+#define BLOCKSIZE BYTES_PER_SECTOR
+
+#define MAX_PATH_LEN 128
 
 extern struct channel channel[];
 extern struct list partition_list;
 
+extern struct partition* cur_part;
+extern struct dir root;
+
+enum btmp_type {
+    INODE_BITMAP,
+    BLOCK_BITMAP
+};
+
+struct path_search_record {
+    char searched_path[MAX_PATH_LEN];
+    enum filetype ftype;
+    struct dir* p_dir;
+};
+
 void fs_format(struct partition*);
 void fs_init(void);
 Bool mount_partition(struct list_elm* pt_elm,int arg);
+int_32 inode_bitmap_alloc(struct partition* part);
+int_32 block_bitmap_alloc(struct partition* part);
+void sync_bitmap(struct partition* part,uint_32 bit_idx,uint_8 type);
+int_32 sys_open(const char* filename,uint_8 flag);
+const char* path_parse(const char* path,char* name);
+uint_32 path_depth_cnt(const char* path);
+int_32 search_file(const char* filename,struct path_search_record* record);
 
 #endif

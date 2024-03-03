@@ -47,7 +47,12 @@ void init_thread(struct task_struct* pcb,char* name,uint_32 priority)
     pcb->ticks    = priority;
     pcb->elapsed_ticks = 0;
     pcb->status   = TASK_READY;
-    pcb->kmagic   = KMAGIC;
+
+    for (uint_32 fd = 0 ; fd < MAX_OPEN_FILES_PROC ; fd++) {
+        if (fd < 3) pcb->fd_table[fd]=fd;
+        else pcb->fd_table[fd] = -1;   //不能是0，0是标准输入
+    }
+    pcb->kmagic = KMAGIC;
 }
 
 void thread_create(struct task_struct* pcb,thread_func* func,void* arg)
@@ -106,6 +111,10 @@ void make_main_thread()
     main_pcb->ticks  = MAIN_THREAD_PRIO;
     main_pcb->elapsed_ticks = 0;
     list_append(&all_thread_list,&main_pcb->all_list_tag);
+    for (uint_32 fd = 0 ; fd < MAX_OPEN_FILES_PROC ; fd++) {
+        if (fd < 3) main_pcb->fd_table[fd]=fd;
+        else main_pcb->fd_table[fd] = -1;   //不能是0，0是标准输入
+    }
     main_pcb->kmagic = KMAGIC;
 }
 

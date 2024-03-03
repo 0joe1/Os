@@ -6,13 +6,16 @@
 #include "dir.h"
 #include "debug.h"
 #include "list.h"
+#include "file.h"
 
 struct partition* cur_part;
+struct dir root;
 
 void fs_format(struct partition* p)
 {
     struct super_block sb;
     sb.magic = LINFSMAGIC;
+    sb.dir_entry_size = sizeof(struct dir_entry);
     sb.block_cnt = p->sec_cnt;
     sb.inode_cnt = MFILES_PER_PARTITION;
     sb.part_lba  = p->start_sec;
@@ -38,8 +41,7 @@ void fs_format(struct partition* p)
            "    inode_cnt:0x%x\n    block_bitmap_lba:0x%x\n"  \
            "    block_bitmap_sectors:0x%x\n    inode_bitmap_lba:0x%x\n" \
            "    inode_bitmap_sectors:0x%x\n    inode_table_lba:0x%x\n" \
-           "    inode_table_sectors:0x%x\n    data_start_lba:0x%x\n" \
-           "    super_block_lba:0x%x\n    root_dir_lba:0x%x\n", \
+           "    inode_table_sectors:0x%x\n    data_start_lba:0x%x\n" ,\
            sb.magic,sb.part_lba,sb.block_cnt,sb.inode_cnt,sb.block_bitmap_lba,\
            sb.block_bitmap_sects,sb.inode_bitmap_lba,sb.inode_bitmap_sects, \
            sb.inode_array_lba,sb.inode_array_sects,sb.data_start_lba);
@@ -51,12 +53,12 @@ void fs_format(struct partition* p)
 
     /* block bitmap */
     buf[0] |= 1;
-    uint_32 bit_start = free_len - block_bitmap_len;
+    uint_32 bit_start = free_len - max_block_bitmap_len;
     uint_32 bit_end   = sb.block_bitmap_sects * BITS_PER_SECTOR - 1;
     if (bit_start < bit_end)
         for (uint_32 idx = bit_start ; idx <= bit_end ; idx++)
         {
-            buf[idx] |= 1;
+            buf[idx/8] |= (1<<(idx%8));
         }
     ide_write(p->hd,buf,sb.block_bitmap_lba,sb.block_bitmap_sects);
 
@@ -131,6 +133,11 @@ void fs_init(void)
 
     char default_part[8] = "sdb1";
     list_traversal(&partition_list,mount_partition,(int)default_part);
+
+    open_root_dir(cur_part);
+    for (uint_32 fd_idx = 0 ; fd_idx < MAX_OPEN_FILES ; fd_idx++){
+        file_table[fd_idx].inode = NULL;
+    }
 }
 
 Bool mount_partition(struct list_elm* pt_elm,int arg)
@@ -156,6 +163,7 @@ Bool mount_partition(struct list_elm* pt_elm,int arg)
     if (cur_part->block_bitmap.bits == NULL) {
         PANIC("mount_partition alloc memory failed");
     }
+    ide_read(pt->hd,cur_part->block_bitmap.bits,sb->block_bitmap_lba,sb->block_bitmap_sects);
 
     /* inode */
     cur_part->inode_bitmap.map_size = sb->inode_bitmap_sects*BYTES_PER_SECTOR;
@@ -163,10 +171,157 @@ Bool mount_partition(struct list_elm* pt_elm,int arg)
     if (cur_part->inode_bitmap.bits == NULL) {
         PANIC("mount_partition alloc memory failed");
     }
+    ide_read(pt->hd,cur_part->inode_bitmap.bits,sb->inode_bitmap_lba,sb->inode_bitmap_sects);
     list_init(&cur_part->open_inodes);
 
     printk("mount %s done!\n",cur_part->name);
     return true;
+}
+
+int_32 inode_bitmap_alloc(struct partition* part)
+{
+    struct bitmap* inode_btmp = &part->inode_bitmap;
+    uint_32 free_pos = bit_scan(inode_btmp,1);
+    if (free_pos == -1) {
+        return -1;
+    }
+    bitmap_set(inode_btmp,free_pos,1);
+    return free_pos;
+}
+
+int_32 block_bitmap_alloc(struct partition* part)
+{
+    struct bitmap* block_btmp = &part->block_bitmap;
+    struct super_block* sb = part->sb;
+    uint_32 sec_off = bit_scan(block_btmp,1);
+    if (sec_off == -1) {
+        return -1;
+    }
+    bitmap_set(block_btmp,sec_off,1);
+    return sb->data_start_lba + sec_off;
+}
+
+void sync_bitmap(struct partition* part,uint_32 bit_idx,uint_8 type)
+{
+    ASSERT(type==INODE_BITMAP || type==BLOCK_BITMAP);
+    struct super_block* sb = part->sb;
+    uint_32 lba_off    = bit_idx/8/BYTES_PER_SECTOR;
+    uint_32 start_byte = lba_off*BYTES_PER_SECTOR;
+
+    struct bitmap* btmp;
+    switch(type){
+        case INODE_BITMAP:
+            btmp = &part->inode_bitmap;
+            ide_write(part->hd,btmp->bits+start_byte,sb->inode_bitmap_lba+lba_off,1);
+            break;
+        case BLOCK_BITMAP:
+            btmp = &part->block_bitmap;
+            ide_write(part->hd,btmp->bits+start_byte,sb->block_bitmap_lba+lba_off,1);
+            break;
+    }
+}
+
+const char* path_parse(const char* path,char* name)
+{
+    const char* pathp = path;
+    while (pathp[0] == '/') pathp++;
+    while (*pathp && *pathp != '/') (*name++ = *pathp++);
+    *name = '\0';
+    if (*pathp || *(pathp+1)){
+        return NULL;
+    }
+    return pathp;
+}
+
+uint_32 path_depth_cnt(const char* path)
+{
+    ASSERT(path != NULL);
+    uint_32 counter = 0;
+    char buf[FILENAME_MAXLEN];
+    const char* subpath = path;
+    while ((subpath = path_parse(subpath,buf))) {
+        counter++;
+        memset(buf,0,sizeof(buf));
+    }
+    return counter;
+}
+
+int_32 search_file(const char* filename,struct path_search_record* record)
+{
+    const char* subpath = filename;
+    char cur_name[FILENAME_MAXLEN];
+    struct dir_entry de;
+
+    record->p_dir = &root;
+    uint_32 grandfather = record->p_dir->inode->ino;
+    subpath = path_parse(subpath,cur_name);
+    while (*subpath)
+    {
+        strcat(record->searched_path,"/");
+        strcat(record->searched_path,cur_name);
+        if (!search_dir_entry(cur_part,record->p_dir,cur_name,&de)) {
+            printk("search_dir_entry failed\n");
+            printk("searched path:%s\n",record->searched_path);
+            return -1;
+        }
+        record->ftype = de.ftype;
+        if (de.ftype == FT_DIRECTORY)
+        {
+            grandfather = record->p_dir->inode->ino;
+            close_dir(record->p_dir);
+            record->p_dir = open_dir(cur_part,de.ino);
+            subpath = path_parse(subpath,cur_name);
+            continue;
+        }
+        else if(de.ftype == FT_REGULAR)
+        {
+            return de.ino;
+        }
+        else
+        {
+            return -1;
+        }
+    }
+
+    close_dir(record->p_dir);
+    record->p_dir = open_dir(cur_part,grandfather);
+    return de.ino;
+}
+
+int_32 sys_open(const char* filename,uint_8 flag)
+{
+    if (filename[strlen(filename)-1] == '/') {
+        printk("use dir_open to open directory\n");
+        return -1;
+    }
+    struct path_search_record record;
+    memset(&record,0,sizeof(record));
+    int_32 ino = search_file(filename,&record);
+    Bool exist = ino==-1 ? 0 : 1;
+    /* remove anormalies */
+    if (!exist && !(flag&O_CREAT)) {
+        printk("the file you search doesn't exists\n");
+        printk("searched path:%s\n",record.searched_path);
+        return -1;
+    }
+    if (exist && record.ftype==FT_DIRECTORY) {
+        printk("use dir_open to open directory\n");
+        return -1;
+    }
+
+    int_32 fd;
+    if (exist)
+    {
+        printk("file exists\n");
+        fd = file_open(ino,flag);
+    }
+    else
+    {
+        printk("creating new file...\n");
+        const char* new_fname = strrchr(filename,'/')+1;
+        fd = file_create(record.p_dir,new_fname,flag);
+    }
+    return fd;
 }
 
 

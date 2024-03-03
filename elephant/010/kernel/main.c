@@ -12,6 +12,8 @@
 #include "syscall.h"
 #include "syscall-init.h"
 #include "stdio.h"
+#include "fs.h"
+#include "file.h"
 
 void k_thread1(void*);
 void k_thread2(void*);
@@ -29,6 +31,9 @@ int main(void){
     intr_enable();
     thread_start("k_thread_1",31,k_thread1,"argA ");
     thread_start("k_thread_2",31,k_thread2,"argB ");
+
+    uint_32 fd = sys_open("/file1",O_CREAT);
+    printf("fd=%d",fd);
     while(1);
     return 0;
 }

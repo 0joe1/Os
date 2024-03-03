@@ -6,6 +6,7 @@
 
 #define PAGESIZE 4096
 #define KMAGIC 0x54878290  //防止栈破坏信息
+#define MAX_OPEN_FILES_PROC 7
 
 extern struct list thread_ready_list;
 extern struct list all_thread_list;
@@ -71,6 +72,7 @@ struct task_struct {
     uint_32 priority;
     void* pdir;
     struct virt_addr usrprog_vaddr;
+    uint_32 fd_table[MAX_OPEN_FILES_PROC];
     struct mem_block_desc usr_block_desc[DESC_CNT];
     uint_32 kmagic;
 };

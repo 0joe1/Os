@@ -10,7 +10,7 @@ char* strcpy(char* dst_,const char* src_);
 uint_32 strlen(const char* str);
 int_8 strcmp(const char* a,const char* b);
 char* strchr(const char* str,uint_8 ch);
-char* strrchr(const char* str,uint_8 ch);
+const char* strrchr(const char* str,char ch);
 char* strcat(char* dst_,const char* src_);
 uint_32 strchrs(const char* str,uint_8 ch);
 

@@ -1,12 +1,19 @@
 #ifndef FS_DIR_H
 #define FS_DIR_H
 #include "stdint.h"
+#include "inode.h"
 
 #define FILENAME_MAXLEN 20
 enum filetype {
+    FT_UNKNOWN,  //默认为0,unknown
     FT_REGULAR,
     FT_DIRECTORY,
-    FT_UNKNOWN
+};
+
+struct dir {
+    struct inode* inode;
+    uint_32 dir_pos;
+    char dir_buf[512];
 };
 
 struct dir_entry {
@@ -14,5 +21,12 @@ struct dir_entry {
     char filename[FILENAME_MAXLEN];
     enum filetype ftype;
 };
+
+void open_root_dir(struct partition* part);
+struct dir* open_dir(struct partition* part,uint_32 ino);
+void close_dir(struct dir* dir);
+void dir_entry_init(struct dir_entry* de,uint_32 ino,const char* fname,enum filetype type);
+Bool sync_dir_entry(struct dir* p_dir,struct dir_entry* de,void* io_buf);
+Bool search_dir_entry(struct partition* part,struct dir* pdir,const char* fname,struct dir_entry* de);
 
 #endif

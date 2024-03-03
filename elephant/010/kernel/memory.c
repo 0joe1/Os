@@ -281,6 +281,9 @@ void* sys_malloc(uint_32 size)
     {
         uint_32 page_cnt = DIV_ROUND_UP(size + sizeof(struct arena),PAGESIZE);
         arena = malloc_page(pf,page_cnt);
+        ASSERT(arena != NULL);
+        memset(arena,0,PAGESIZE*page_cnt);
+
         arena->blk_desc = NULL;
         arena->cnt      = page_cnt;
         arena->large    = true;
@@ -311,6 +314,7 @@ void* sys_malloc(uint_32 size)
     }
 
     blk = mem2entry(struct mem_block,list_pop(&desc->free_list),elm);
+    memset(blk,0,desc->block_size);
     arena = block2arena(blk);
     arena->cnt--;
 

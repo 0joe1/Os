@@ -42,7 +42,7 @@ OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/keyboard.o $(BUILD)/ioqueue.o $(BUILD)/tss.o \
 		 $(BUILD)/process.o  $(BUILD)/syscall-init.o $(BUILD)/syscall.o \
 		 $(BUILD)/stdio.o $(BUILD)/ide.o $(BUILD)/stdio-kernel.o \
-		 $(BUILD)/fs.o
+		 $(BUILD)/fs.o $(BUILD)/file.o $(BUILD)/inode.o $(BUILD)/dir.o
 
 ################# 汇编代码编译 ####################
 %.bin:%.asm
@@ -70,7 +70,7 @@ $(BUILD)/interrupt.o: kernel/interrupt.c kernel/interrupt.h \
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD)/timer.o: device/timer.c device/timer.h lib/stdint.h \
-				  lib/kernel/io.h lib/kernel/print.h
+				  lib/kernel/io.h lib/kernel/print.h thread/thread.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD)/debug.o: kernel/debug.c kernel/debug.h \
@@ -139,6 +139,15 @@ $(BUILD)/stdio-kernel.o: lib/kernel/stdio-kernel.c lib/kernel/stdio-kernel.h
 
 $(BUILD)/fs.o: fs/fs.c fs/fs.h kernel/global.h kernel/debug.h device/ide.h \
 			   kernel/memory.h fs/dir.h fs/inode.h userprog/syscall-init.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/inode.o: fs/inode.c fs/inode.h fs/super_block.h fs/fs.h 
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/file.o: fs/file.c fs/file.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/dir.o: fs/dir.c fs/dir.h
 	$(CC) $(CFLAGS) $< -o $@
 
 ################ 链接所有目标文件 ###################

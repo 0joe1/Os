@@ -64,23 +64,24 @@ int_8 strcmp(const char* a,const char* b)
 char* strchr(const char* str,uint_8 ch)
 {
     ASSERT(str != NULL);
-    while(*str++) {
-        if (*str == ch)
+    while(*str) {
+        if (*str++ == ch)
             return (char*)str;
     }
     return NULL;
 }
 
-char* strrchr(const char* str,uint_8 ch)
+const char* strrchr(const char* str,char ch)
 {
     ASSERT(str != NULL);
     char* ret;
-    while(*str++) {
+    while(*str) {
         if (*str == ch)
             ret = (char*)str;
+        str++;
     }
 
-    return *str==NULL ? NULL : ret;
+    return *ret==NULL ? NULL : ret;
 }
 
 char* strcat(char* dst_,const char* src_)
