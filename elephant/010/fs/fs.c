@@ -8,6 +8,7 @@
 #include "debug.h"
 #include "list.h"
 #include "file.h"
+#include "console.h"
 
 struct partition* cur_part;
 struct dir root;
@@ -334,13 +335,36 @@ int_32 fdlocal2gloabl(int_32 local_fd)
 
 int_32 sys_close(int_32 fd)
 {
+    int_32 ret;
     int_32 _fd = fdlocal2gloabl(fd);
-    free_inode(file_table[_fd].inode);
-    file_table[_fd].inode = NULL;
-    struct task_struct* cur = running_thread();
-    cur->fd_table[fd] = -1;
-    printk("fd %d closed\n",fd);
+    ret = file_close(&file_table[_fd]);
+    if (fd > 3){
+        struct task_struct* cur = running_thread();
+        cur->fd_table[fd] = -1;
+        printk("fd %d closed\n",fd);
+    }
+    return ret;
+}
 
-    return 0;
+int_32 sys_write(uint_32 fd,const void* buf,uint_32 count)
+{
+    uint_32 _fd = fdlocal2gloabl(fd);
+    if (_fd == -1) {
+        printk("can't find file in file table\n");
+        return -1;
+    }
+    if (fd == stdout) {
+        char* buffer = (char*)buf;
+        console_put_str(buffer);
+        return count;
+    }
+
+    struct file* f = &file_table[_fd];
+    if (f->flag == O_WRONLY || f->flag == O_RDWT) {
+        printk("can't open without write flag\n");
+        return -1;
+    }
+    uint_32 written = file_write(f,buf,count);
+    return written;
 }
 

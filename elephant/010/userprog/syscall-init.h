@@ -3,7 +3,7 @@
 #include "stdint.h"
 
 uint_32 sys_getpid(void);
-uint_32 sys_write(char*);
+uint_32 write(uint_32 fd,const void* buf,uint_32 count);
 void syscall_init(void);
 
 #endif

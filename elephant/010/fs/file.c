@@ -1,4 +1,5 @@
 #include "file.h"
+#include "debug.h"
 #include "memory.h"
 #include "string.h"
 #include "stdio-kernel.h"
@@ -6,6 +7,7 @@
 #include "inode.h"
 #include "thread.h"
 #include "interrupt.h"
+#include "global.h"
 
 struct file file_table[MAX_OPEN_FILES];
 
@@ -125,3 +127,149 @@ int_32 file_open(uint_32 ino,uint_8 flag)
 
     return pcb_fd_install(fidx);
 }
+
+int_32 file_close(struct file* file)
+{
+    if (file == NULL) {
+        return -1;
+    }
+    file->inode->write_deny = false;
+    inode_close(file->inode);
+    file->inode = NULL;
+    return 0;
+}
+
+int_32 blk_alloc_sync(struct partition* part,struct inode* inode,uint_32* all_blocks,uint_32 blkidx)
+{
+    uint_32 lba = block_bitmap_alloc(part);
+    uint_32 bit_idx = lba - part->sb->data_start_lba;
+    inode->block[blkidx] = all_blocks[blkidx] = lba;
+    sync_bitmap(part,bit_idx,BLOCK_BITMAP);
+    return lba;
+}
+
+int_32 file_write(struct file* file,const void* buf,uint_32 count)
+{
+    if ((file->inode->i_size + count) >= MAX_FILESIZE){
+        printk("exceed max filesize\n");
+        return -1;
+    }
+    const char* src = buf;
+    uint_32* all_blocks = sys_malloc(sizeof(uint_32)*140);
+    if (all_blocks == NULL) {
+        printk("file_write: all_blocks alloc failed\n");
+        return -1;
+    }
+    char* io_buf = sys_malloc(1024);
+    if (io_buf == NULL) {
+        sys_free(io_buf);
+        printk("file_write: io_buf alloc failed\n");
+        return -1;
+    }
+
+    //printk("inode table start at:0x%x\n",cur_part->sb->inode_array_lba);
+    //printk("data start at:0x%x\n",cur_part->sb->data_start_lba);
+    struct inode* inode = file->inode;
+    ASSERT(inode != NULL);
+
+    uint_32 cur_blksize = DIV_ROUND_UP(inode->i_size,BLOCKSIZE);
+    uint_32 fu_blksize = DIV_ROUND_UP(inode->i_size+count,BLOCKSIZE);
+    uint_32 add_blks = fu_blksize - cur_blksize;
+
+
+    uint_32 cur_blkidx = cur_blksize - 1;
+    int_32 lba;
+    if (cur_blksize == 0) {
+        lba = block_bitmap_alloc(cur_part);
+        inode->block[0] = lba;
+        uint_32 bit_idx = lba - cur_part->sb->data_start_lba;
+        sync_bitmap(cur_part,bit_idx,BLOCK_BITMAP);
+        cur_blkidx = 0;
+        add_blks--;
+    }
+    all_blocks[cur_blkidx++] = inode->block[0];
+    if (fu_blksize < 12)
+    {
+        while (add_blks--) {
+            if ((lba = blk_alloc_sync(cur_part,inode,all_blocks,cur_blkidx)) == -1) {
+                sys_free(io_buf);
+                sys_free(all_blocks);
+                printk("file_write: blk_alloc_sync failed\n");
+                return -1;
+            }
+            cur_blkidx++;
+        }
+    }
+    else if (cur_blksize < 12 && fu_blksize >= 12)
+    {
+        if ((lba = blk_alloc_sync(cur_part,inode,all_blocks,12)) == -1) {
+            sys_free(io_buf);
+            sys_free(all_blocks);
+            printk("file_write: blk_alloc_sync failed\n");
+            return -1;
+        }
+
+        for (; cur_blkidx < 12 ; cur_blkidx++,add_blks--) {
+            if ((lba = blk_alloc_sync(cur_part,inode,all_blocks,cur_blkidx)) == -1) {
+                sys_free(io_buf);
+                sys_free(all_blocks);
+                printk("file_write: blk_alloc_sync failed\n");
+                return -1;
+            }
+        }
+        while (add_blks--){
+            if ((lba = block_bitmap_alloc(cur_part)) == -1) {
+                sys_free(io_buf);
+                sys_free(all_blocks);
+                printk("file_write: block bitmap alloc failed\n");
+                return -1;
+            }
+            all_blocks[cur_blkidx++] = lba;
+        }
+        ide_write(cur_part->hd,all_blocks+12,inode->block[12],1);
+    }
+    else
+    {
+        while (add_blks--){
+            if ((lba = block_bitmap_alloc(cur_part)) == -1) {
+                sys_free(io_buf);
+                sys_free(all_blocks);
+                printk("file_write: block bitmap alloc failed\n");
+                return -1;
+            }
+            all_blocks[cur_blkidx++] = lba;
+        }
+        ide_write(cur_part->hd,all_blocks+12,inode->block[12],1);
+    }
+
+    uint_32 blk_idx = cur_blksize>0 ? cur_blksize - 1 : 0;
+    uint_32 size_left = count;
+    uint_32 sec_start_byte;
+    uint_32 sec_remain_bytes;
+    uint_32 size_tow;
+    while (size_left)
+    {
+        ASSERT(blk_idx < fu_blksize);
+        sec_start_byte = inode->i_size % BLOCKSIZE;
+        sec_remain_bytes = BLOCKSIZE - sec_start_byte;
+        size_tow  = size_left < sec_remain_bytes ? size_left : sec_remain_bytes;
+        memset(io_buf,0,512);
+        if (blk_idx == cur_blksize-1) {
+            ide_read(cur_part->hd,io_buf,all_blocks[blk_idx],1);
+        }
+        memcpy(io_buf+sec_start_byte,(void*)src,size_tow);
+
+        ide_write(cur_part->hd,io_buf,all_blocks[blk_idx++],1);
+        printk("file write at lba 0x%x\n",all_blocks[blk_idx-1]);
+        src += size_tow;
+        inode->i_size += size_tow;
+        size_left -= size_tow;
+    }
+    memset(io_buf,0,1024);
+    sync_inode_array(cur_part,inode,io_buf);
+
+    sys_free(io_buf);
+    sys_free(all_blocks);
+    return count-size_left;
+}
+

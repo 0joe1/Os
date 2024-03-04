@@ -10,7 +10,7 @@ enum SYSCALL {
 };
 
 uint_32 getpid(void);
-uint_32 write(char*);
+uint_32 write(uint_32 fd,const void* buf,uint_32 count);
 void* malloc(uint_32 size);
 void free(void* ptr);
 

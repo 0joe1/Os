@@ -6,4 +6,5 @@
     - -I../lib/usr
     - -I../device
     - -I../thread
+    - -I../fs
     - -m32

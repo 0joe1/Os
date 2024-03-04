@@ -24,6 +24,12 @@ enum btmp_type {
     BLOCK_BITMAP
 };
 
+enum standard {
+    stdin,
+    stdout,
+    stderr
+};
+
 struct path_search_record {
     char searched_path[MAX_PATH_LEN];
     enum filetype ftype;
@@ -42,5 +48,6 @@ uint_32 path_depth_cnt(const char* path);
 int_32 search_file(const char* filename,struct path_search_record* record);
 int_32 fdlocal2gloabl(int_32 local_fd);
 int_32 sys_close(int_32 fd);
+int_32 sys_write(uint_32 fd,const void* buf,uint_32 count);
 
 #endif

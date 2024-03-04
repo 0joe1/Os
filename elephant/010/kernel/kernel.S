@@ -45,10 +45,10 @@ syscall_handler:
     push gs
     pushad
     push 0x80 ;占位而已，0x80实际没意义，与前面压中断号保持队形罢了
-    
-    push ebx
-    push ecx
+
     push edx
+    push ecx
+    push ebx
     call [syscall_table + eax*4]
     add esp,12
 

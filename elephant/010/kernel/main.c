@@ -29,11 +29,12 @@ int main(void){
     //process_execute("user_prog_b",u_prog_b);
 
     intr_enable();
-    thread_start("k_thread_1",31,k_thread1,"argA ");
-    thread_start("k_thread_2",31,k_thread2,"argB ");
+    //thread_start("k_thread_1",31,k_thread1,"argA ");
+    //thread_start("k_thread_2",31,k_thread2,"argB ");
 
-    uint_32 fd = sys_open("/file1",O_RDONLY);
+    uint_32 fd = sys_open("/file1",O_CREAT);
     printf("fd=%d\n",fd);
+    sys_write(fd,"hello-world\n",12);
     sys_close(fd);
     while(1);
     return 0;

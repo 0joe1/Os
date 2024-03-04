@@ -73,9 +73,9 @@ uint_32 printf(const char* format,...)
     uint_32 retLen;
     va_list ap;
     va_start(ap,format);
-    retLen = vsprintf(buf,format,ap);
+    vsprintf(buf,format,ap);
     va_end(ap);
-    write(buf);
+    retLen = write(1,buf,strlen(buf));
     return retLen;
 }
 
