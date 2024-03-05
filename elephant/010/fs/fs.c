@@ -314,7 +314,7 @@ int_32 sys_open(const char* filename,uint_8 flag)
     int_32 fd;
     if (exist)
     {
-        printk("file exists\n");
+        printk("file exists,openning now...\n");
         fd = file_open(ino,flag);
     }
     else
@@ -360,11 +360,56 @@ int_32 sys_write(uint_32 fd,const void* buf,uint_32 count)
     }
 
     struct file* f = &file_table[_fd];
-    if (f->flag == O_WRONLY || f->flag == O_RDWT) {
-        printk("can't open without write flag\n");
+    if (!(f->flag == O_WRONLY || f->flag == O_RDWT)) {
+        printk("can't write without write flag\n");
         return -1;
     }
     uint_32 written = file_write(f,buf,count);
     return written;
+}
+
+int_32 sys_read(uint_32 fd,void* buf,uint_32 count)
+{
+    uint_32 _fd = fdlocal2gloabl(fd);
+    if (_fd == -1) {
+        printk("can't find file in file table\n");
+        return -1;
+    }
+    struct file* f = &file_table[_fd];
+    if (!(f->flag == O_RDONLY || f->flag == O_RDWT)) {
+        printk("can't read without read flag\n");
+        return -1;
+    }
+    return file_read(f,buf,count);
+}
+
+int_32 sys_lseek(uint_32 fd,int_32 offset,uint_8 whence)
+{
+    ASSERT(whence>0 && whence<4);
+    if (fd < 0) {
+        printk("sys_lseek: fd < 0\n");
+        return -1;
+    }
+    struct task_struct* cur = running_thread();
+    uint_32 _fd = fdlocal2gloabl(fd);
+    struct file* f = &file_table[_fd];
+    int_32 new_pos;
+    switch(whence) {
+        case SEEK_SET:
+            new_pos = offset;
+            break;
+        case SEEK_CUR:
+            new_pos = (int_32)f->fd_pos + offset;
+            break;
+        case SEEK_END:
+            new_pos = f->inode->i_size + offset;
+            break;
+    }
+    if (new_pos > f->inode->i_size || new_pos < 0) {
+        printk("exceed the range of file\n");
+        return -1;
+    }
+    f->fd_pos = new_pos;
+    return f->fd_pos;
 }
 

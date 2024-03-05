@@ -24,23 +24,36 @@ int prog_a_pid,prog_b_pid;
 int main(void){
     put_str("kernel starting...\n");
     init();
-
-    //process_execute("user_prog_a",u_prog_a);
-    //process_execute("user_prog_b",u_prog_b);
-
     intr_enable();
-    //thread_start("k_thread_1",31,k_thread1,"argA ");
-    //thread_start("k_thread_2",31,k_thread2,"argB ");
 
-    uint_32 fd = sys_open("/file1",O_CREAT);
-    printf("fd=%d\n",fd);
-    sys_write(fd,"hello-world\n",12);
+    uint_32 fd = sys_open("/file1",O_RDWT);
+    printf("open /file1,fd=%d\n",fd);
+    char buf[64];
+    memset(buf,0,64);
+    int read_bytes = sys_read(fd,buf,18);
+    printf("1_ read %d bytes:\n%s\n",read_bytes,buf);
+
+    memset(buf,0,64);
+    read_bytes = sys_read(fd,buf,6);
+    printf("2_ read %d bytes:\n%s\n",read_bytes,buf);
+
+    memset(buf,0,64);
+    read_bytes = sys_read(fd,buf,6);
+    printf("3_ read %d bytes:\n%s\n",read_bytes,buf);
+
+    printf("______________ SEEK SET 0 ____________\n");
+    sys_lseek(fd,0,SEEK_SET);
+    memset(buf,0,64);
+    read_bytes = sys_read(fd,buf,24);
+    printf("4_ read %d bytes:\n%s",read_bytes,buf);
+
     sys_close(fd);
     while(1);
     return 0;
 }
 void k_thread1(void* arg)
 {
+    char a[20] = {0};
     while(1);
 }
 

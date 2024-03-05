@@ -46,7 +46,7 @@ uint_32 getpid(void) {
     return _syscall0(SYS_GETPID);
 }
 
-uint_32 write(uint_32 fd,const void* buf,uint_32 count) {
+int_32 write(uint_32 fd,const void* buf,uint_32 count) {
     return _syscall3(SYS_WRITE,fd,buf,count);
 }
 

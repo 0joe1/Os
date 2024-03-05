@@ -7,6 +7,7 @@ THREAD   := thread
 USERPROG := userprog
 FS       := fs
 
+CC 		= gcc
 LIB     = -I lib/ -I $(LIBK)/ -I $(LIBU) -I $(KERNEL) -I $(DEVICE) -I $(THREAD) \
 		  -I $(USERPROG) -I $(FS)
 #LDFALGS := -Ttext 0xc0001500 -e main

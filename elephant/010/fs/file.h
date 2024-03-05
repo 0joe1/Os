@@ -26,5 +26,6 @@ int_32 get_free_slot_filetable(void);
 int_32 pcb_fd_install(uint_32 fd_idx);
 int_32 blk_alloc_sync(struct partition* part,struct inode* inode,uint_32* all_blocks,uint_32 blkidx);
 int_32 file_write(struct file* file,const void* buf,uint_32 count);
+int_32 file_read(struct file* file,void* buf,uint_32 count);
 
 #endif

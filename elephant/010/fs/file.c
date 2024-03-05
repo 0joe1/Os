@@ -188,7 +188,7 @@ int_32 file_write(struct file* file,const void* buf,uint_32 count)
         add_blks--;
     }
     all_blocks[cur_blkidx++] = inode->block[0];
-    if (fu_blksize < 12)
+    if (fu_blksize <= 12)
     {
         while (add_blks--) {
             if ((lba = blk_alloc_sync(cur_part,inode,all_blocks,cur_blkidx)) == -1) {
@@ -200,7 +200,7 @@ int_32 file_write(struct file* file,const void* buf,uint_32 count)
             cur_blkidx++;
         }
     }
-    else if (cur_blksize < 12 && fu_blksize >= 12)
+    else if (cur_blksize <= 12 && fu_blksize > 12)
     {
         if ((lba = blk_alloc_sync(cur_part,inode,all_blocks,12)) == -1) {
             sys_free(io_buf);
@@ -267,6 +267,83 @@ int_32 file_write(struct file* file,const void* buf,uint_32 count)
     }
     memset(io_buf,0,1024);
     sync_inode_array(cur_part,inode,io_buf);
+
+    sys_free(io_buf);
+    sys_free(all_blocks);
+    return count-size_left;
+}
+
+int_32 file_read(struct file* file,void* buf,uint_32 count)
+{
+    if ((file->fd_pos + count) >= file->inode->i_size){
+        count = file->inode->i_size - file->fd_pos;
+        if (count == 0) {
+            printk("read the end of file\n");
+            return -1;
+        }
+    }
+    if (count == 0){ return 0; }
+
+    char* dst = buf;
+    uint_32* all_blocks = sys_malloc(sizeof(uint_32)*140);
+    if (all_blocks == NULL) {
+        printk("file_write: all_blocks alloc failed\n");
+        return -1;
+    }
+    char* io_buf = sys_malloc(BLOCKSIZE);
+    if (io_buf == NULL) {
+        sys_free(io_buf);
+        printk("file_write: io_buf alloc failed\n");
+        return -1;
+    }
+
+    struct inode* inode = file->inode;
+    ASSERT(inode != NULL);
+
+    uint_32 start_size = DIV_ROUND_UP(file->fd_pos,BLOCKSIZE);
+    uint_32 start_idx = start_size > 0 ? start_size -1 : 0;
+    uint_32 end_idx   = DIV_ROUND_UP(file->fd_pos+count,BLOCKSIZE) - 1;
+    uint_32 blks_to_read = end_idx - start_idx + 1;
+
+    uint_32 cur_blkidx = start_idx;
+    if (end_idx < 12)
+    {
+        while (blks_to_read--) {
+            all_blocks[cur_blkidx] = inode->block[cur_blkidx];
+            cur_blkidx++;
+        }
+    }
+    else if (start_idx < 12 && end_idx >= 12)
+    {
+        for (; cur_blkidx < 12 ; cur_blkidx++) {
+            all_blocks[cur_blkidx] = inode->block[cur_blkidx];
+        }
+        ide_read(cur_part->hd,all_blocks+12,inode->block[12],1);
+    }
+    else
+    {
+        ide_read(cur_part->hd,all_blocks+12,inode->block[12],1);
+    }
+
+    cur_blkidx = start_idx;
+    uint_32 size_left = count;
+    uint_32 sec_start_byte;
+    uint_32 sec_remain_bytes;
+    uint_32 size_rd;
+    while (size_left)
+    {
+        ASSERT(cur_blkidx <= end_idx);
+        sec_start_byte = file->fd_pos % BLOCKSIZE;
+        sec_remain_bytes = BLOCKSIZE - sec_start_byte;
+        size_rd  = size_left < sec_remain_bytes ? size_left : sec_remain_bytes;
+        memset(io_buf,0,512);
+        ide_read(cur_part->hd,io_buf,all_blocks[cur_blkidx],1);
+        memcpy(dst,io_buf+sec_start_byte,size_rd);
+
+        file->fd_pos += size_rd;
+        dst += size_rd;
+        size_left -= size_rd;
+    }
 
     sys_free(io_buf);
     sys_free(all_blocks);
