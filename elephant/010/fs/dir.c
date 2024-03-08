@@ -4,6 +4,7 @@
 #include "stdio-kernel.h"
 #include "fs.h"
 #include "debug.h"
+#include "inode.h"
 
 void open_root_dir(struct partition* part)
 {
@@ -104,6 +105,8 @@ Bool sync_dir_entry(struct dir* p_dir,struct dir_entry* de,void* io_buf)
             memcpy(de_ptr,de,sizeof(struct dir_entry));
             ide_write(cur_part->hd,io_buf,all_blocks[blk],1);
             p_dir->inode->i_size += sizeof(struct dir_entry);
+            memset(io_buf,0,1024);
+            sync_inode_array(cur_part,p_dir->inode,io_buf);
             return true;
         }
     }
@@ -153,4 +156,97 @@ Bool search_dir_entry(struct partition* part,struct dir* pdir,const char* fname,
     sys_free(de_buf);
     return false;
 }
+
+Bool delete_dir_entry(struct partition* part,struct dir* pdir,uint_32 ino,void* io_buf)
+{
+    if (ino == 0) {
+        return false;
+    }
+    uint_32* all_blocks = sys_malloc(sizeof(uint_32)*140);
+    if (all_blocks == NULL) {
+        printk("delete_dir_entry: all_blocks malloc failed\n");
+        return -1;
+    }
+
+    struct inode* p_inode = pdir->inode;
+    for (uint_32 blk = 0 ; blk < 12 ; blk++) {
+        all_blocks[blk] = p_inode->block[blk];
+    }
+    if (p_inode->block[12] != 0) {
+        ide_read(part->hd,all_blocks+12,p_inode->block[12],1);
+    }
+
+    struct super_block* sb = part->sb;
+    uint_32 max_dir_cnt = BLOCKSIZE/sizeof(struct dir_entry);
+    for (uint_32 blk = 0 ; blk < 140 ; blk++)
+    {
+        if (all_blocks[blk] == 0) continue;
+
+        memset(io_buf,0,BLOCKSIZE);
+        ide_read(part->hd,io_buf,all_blocks[blk],1);
+        struct dir_entry* de_buf = io_buf;
+        struct dir_entry* de_found = NULL;
+        uint_32 dir_cnt = 0;
+        for (uint_32 di = 0 ; di < max_dir_cnt ; di++) {
+            if ((de_buf+di)->ftype == FT_UNKNOWN) continue;
+            dir_cnt++;
+            if ((de_buf+di)->ino == ino) {
+                de_found = de_buf + di;
+                continue;
+            }
+        }
+        if (de_found == NULL){
+            continue;
+        }
+
+        ASSERT(dir_cnt > 0);
+        uint_32 block_btmp_idx;
+        if (dir_cnt > 1)
+        {
+            memset(de_found,0,sizeof(struct dir_entry));
+            ide_write(part->hd,io_buf,all_blocks[blk],1);
+        }
+        else
+        {
+            block_btmp_idx = all_blocks[blk] - sb->data_start_lba;
+            bitmap_set(&part->block_bitmap,block_btmp_idx,0);
+            sync_bitmap(part,block_btmp_idx,BLOCK_BITMAP);
+            if (blk < 12)
+            {
+                p_inode->block[blk] = 0;
+            }
+            else
+            {
+                uint_32 indirect_blkcnt = 0;
+                for (uint_32 b = 12 ; b < 140 ; b++) {
+                    if (all_blocks[b] != 0) indirect_blkcnt++;
+                }
+                ASSERT(indirect_blkcnt != 0);
+
+                if (indirect_blkcnt > 1) 
+                {
+                    all_blocks[blk] = 0;
+                    ide_write(part->hd,all_blocks+12,all_blocks[12],1);
+                }
+                else
+                {
+                    block_btmp_idx = p_inode->block[12] - sb->data_start_lba;
+                    bitmap_set(&part->block_bitmap,block_btmp_idx,0);
+                    sync_bitmap(part,block_btmp_idx,BLOCK_BITMAP);
+                    p_inode->block[12] = 0;
+                }
+            }
+        }
+        memset(io_buf,0,BLOCKSIZE*2);
+        pdir->inode->i_size -= sizeof(struct dir_entry);
+        sync_inode_array(part,p_inode,io_buf);
+        return true;
+    }
+    sys_free(all_blocks);
+    return false;
+}
+
+
+
+
 

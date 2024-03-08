@@ -26,5 +26,6 @@ struct inode* malloc_inode(void);
 void free_inode(struct inode* inode);
 struct inode* inode_open(struct partition* part,uint_32 ino);
 void inode_close(struct inode* inode);
+void inode_release(struct partition* part,uint_32 ino);
 
 #endif

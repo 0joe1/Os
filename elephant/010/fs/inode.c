@@ -60,12 +60,15 @@ void sync_inode_array(struct partition* part,struct inode* inode,void* buf)
     char* inode_buf = buf;
     uint_8 sec_op = i_pos.two_sec==true ? 2 : 1;
 
-    inode->open_cnts = 0;
-    inode->write_deny = false;
-    inode->inode_tag.next = inode->inode_tag.prev = NULL;
+    struct inode pure_inode;  //我说怎么open_inode链表坏了，原来这里用了本体!!!
+                              //赶紧改成复制体
+    memcpy(&pure_inode,inode,sizeof(struct inode));
+    pure_inode.open_cnts = 0;
+    pure_inode.write_deny = false;
+    pure_inode.inode_tag.next = pure_inode.inode_tag.prev = NULL; //后面还有一个(\笑哭)
 
     ide_read(part->hd,inode_buf,i_pos.start_lba,sec_op);
-    memcpy(inode_buf+i_pos.byte_offset,inode,sizeof(struct inode));
+    memcpy(inode_buf+i_pos.byte_offset,&pure_inode,sizeof(struct inode));
     ide_write(part->hd,inode_buf,i_pos.start_lba,sec_op);
 }
 
@@ -110,3 +113,48 @@ void inode_close(struct inode* inode)
     }
     intr_set_status(old_stat);
 }
+
+void inode_release(struct partition* part,uint_32 ino)
+{
+    struct inode* inode = inode_open(part,ino);
+    uint_32* all_blocks = sys_malloc(sizeof(uint_32)*140);
+    if (all_blocks == NULL) {
+        printk("inode_release: sys_malloc failed\n");
+        return ;
+    }
+
+    uint_32 btmp_idx;
+    uint_32 blk_cnt = 12;
+    for (uint_32 blk = 0 ; blk < 12 ; blk++) {
+        all_blocks[blk] = inode->block[blk];
+    }
+    if (inode->block[12] != 0) {
+        ide_read(part->hd,all_blocks+12,inode->block[12],1);
+        btmp_idx = inode->block[12] - part->sb->data_start_lba;
+        bitmap_set(&part->block_bitmap,btmp_idx,0);
+        sync_bitmap(part,btmp_idx,BLOCK_BITMAP);
+        blk_cnt = 140;
+    }
+
+    for (uint_32 blk = 0 ; blk < blk_cnt ; blk++)
+    {
+        if (all_blocks[blk] == 0) continue;
+        btmp_idx = inode->block[blk] - part->sb->data_start_lba;
+        bitmap_set(&part->block_bitmap,btmp_idx,0);
+        sync_bitmap(part,btmp_idx,BLOCK_BITMAP);
+    }
+    void* io_buf = sys_malloc(BLOCKSIZE*2);
+    if (io_buf == NULL) {
+        printk("iobuf malloc failed\n");
+        return ;
+    }
+    bitmap_set(&part->inode_bitmap,inode->ino,0);
+    sync_bitmap(part,inode->ino,INODE_BITMAP);
+    inode_close(inode);
+    sys_free(io_buf);
+    sys_free(all_blocks);
+}
+
+
+
+

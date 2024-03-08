@@ -229,7 +229,7 @@ const char* path_parse(const char* path,char* name)
     while (pathp[0] == '/') pathp++;
     while (*pathp && *pathp != '/') (*name++ = *pathp++);
     *name = '\0';
-    if (*pathp || *(pathp+1)){
+    if (*pathp==NULL || *(pathp+1)==NULL){
         return NULL;
     }
     return pathp;
@@ -257,13 +257,13 @@ int_32 search_file(const char* filename,struct path_search_record* record)
     record->p_dir = &root;
     uint_32 grandfather = record->p_dir->inode->ino;
     subpath = path_parse(subpath,cur_name);
-    while (*subpath)
+    while (*cur_name)
     {
         strcat(record->searched_path,"/");
         strcat(record->searched_path,cur_name);
         if (!search_dir_entry(cur_part,record->p_dir,cur_name,&de)) {
-            printk("search_dir_entry failed\n");
-            printk("searched path:%s\n",record->searched_path);
+            //printk("search_dir_entry failed\n");
+            //printk("searched path:%s\n",record->searched_path);
             return -1;
         }
         record->ftype = de.ftype;
@@ -272,7 +272,9 @@ int_32 search_file(const char* filename,struct path_search_record* record)
             grandfather = record->p_dir->inode->ino;
             close_dir(record->p_dir);
             record->p_dir = open_dir(cur_part,de.ino);
-            subpath = path_parse(subpath,cur_name);
+            if (subpath) {
+                subpath = path_parse(subpath,cur_name);
+            }
             continue;
         }
         else if(de.ftype == FT_REGULAR)
@@ -360,7 +362,7 @@ int_32 sys_write(uint_32 fd,const void* buf,uint_32 count)
     }
 
     struct file* f = &file_table[_fd];
-    if (!(f->flag == O_WRONLY || f->flag == O_RDWT)) {
+    if (!(f->flag&O_WRONLY || f->flag&O_RDWT)) {
         printk("can't write without write flag\n");
         return -1;
     }
@@ -376,7 +378,7 @@ int_32 sys_read(uint_32 fd,void* buf,uint_32 count)
         return -1;
     }
     struct file* f = &file_table[_fd];
-    if (!(f->flag == O_RDONLY || f->flag == O_RDWT)) {
+    if (!(f->flag&O_RDONLY || f->flag&O_RDWT)) {
         printk("can't read without read flag\n");
         return -1;
     }
@@ -412,4 +414,115 @@ int_32 sys_lseek(uint_32 fd,int_32 offset,uint_8 whence)
     f->fd_pos = new_pos;
     return f->fd_pos;
 }
+
+int_32 sys_unlink(const char* filename)
+{
+    struct path_search_record record;
+    int_32 ino = search_file(filename,&record);
+    if (ino == -1){
+        printk("can't find the file\n");
+        return -1;
+    }
+    if (record.ftype == FT_DIRECTORY) {
+        printk("can't remove a directory,use ...(name forget) instead\n");
+        return -1;
+    }
+
+    Bool file_open = false;
+    for (uint_32 idx = 0 ; idx < MAX_OPEN_FILES ; idx++)
+    {
+        struct file* f = &file_table[idx];
+        if (f->inode != NULL && f->inode->ino == ino){
+            file_open = true;
+            break;
+        }
+    }
+    if (file_open) {
+        printk("can't close the file that in use\n");
+        return -1;
+    }
+
+    void* io_buf = sys_malloc(BLOCKSIZE*2);
+    delete_dir_entry(cur_part,record.p_dir,ino,io_buf);
+    inode_release(cur_part,ino);
+    sys_free(io_buf);
+    close_dir(record.p_dir);
+    return 0;
+}
+
+int_32 sys_mkdir(const char* pathname)
+{
+    void* buf = sys_malloc(BLOCKSIZE);
+    if (buf == NULL) {
+        printk("sys_mkdir:buf malloc failed\n");
+        return -1;
+    }
+    memset(buf,0,BLOCKSIZE);
+
+    struct path_search_record record;
+    int_32 ino = search_file(pathname,&record);
+    if (ino != -1) {
+        printk("the dir already exists\n");
+        return -1;
+    }
+    uint_32 depth = path_depth_cnt(pathname);
+    if (depth != path_depth_cnt(record.searched_path)) {
+        printk("lack some dir,current at:%s\n",record.searched_path);
+        return -1;
+    }
+
+    struct inode inode;
+    ino = inode_bitmap_alloc(cur_part);
+    if (ino == -1) {
+        printk("sys_mkdir:inode_bitmap alloc failed\n");
+        return -1;
+    }
+    inode_init(&inode,ino);
+
+    struct dir_entry de;
+    memset(&de,0,sizeof(de));
+    const char* dirname = strrchr(pathname,'/')+1;
+    dir_entry_init(&de,ino,dirname,FT_DIRECTORY);
+    if (!sync_dir_entry(record.p_dir,&de,buf)) {
+        printk("sys_mkdir:sync_dir_entry failed\n");
+        return -1;
+    }
+    memset(buf,0,BLOCKSIZE);
+
+    uint_32 first_lba= block_bitmap_alloc(cur_part);
+    if (first_lba == -1) {
+        printk("sys_malloc:no avaliable block\n");
+        return -1;
+    }
+    sync_bitmap(cur_part,ino,INODE_BITMAP);
+
+    uint_32 blk_idx = first_lba - cur_part->sb->data_start_lba;
+    bitmap_set(&cur_part->block_bitmap,blk_idx,1);
+    sync_bitmap(cur_part,blk_idx,BLOCK_BITMAP);
+    inode.block[0] = first_lba;
+
+    struct dir_entry* d_ety = (struct dir_entry*)buf;
+    // .
+    d_ety->ino = ino;
+    strcpy(d_ety->filename,".");
+    d_ety->ftype = FT_DIRECTORY;
+    inode.i_size += cur_part->sb->dir_entry_size;
+    // ..
+    d_ety++;
+    d_ety->ino = record.p_dir->inode->ino;
+    strcpy(d_ety->filename,"..");
+    d_ety->ftype = FT_DIRECTORY;
+    inode.i_size += cur_part->sb->dir_entry_size;
+    ide_write(cur_part->hd,buf,first_lba,1);
+    memset(buf,0,BLOCKSIZE);
+    sync_inode_array(cur_part,&inode,buf);
+
+    close_dir(record.p_dir);
+    sys_free(buf);
+    return 0;
+}
+
+
+
+
 
