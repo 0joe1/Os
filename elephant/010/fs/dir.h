@@ -29,5 +29,6 @@ void dir_entry_init(struct dir_entry* de,uint_32 ino,const char* fname,enum file
 Bool sync_dir_entry(struct dir* p_dir,struct dir_entry* de,void* io_buf);
 Bool search_dir_entry(struct partition* part,struct dir* pdir,const char* fname,struct dir_entry* de);
 Bool delete_dir_entry(struct partition* part,struct dir* pdir,uint_32 ino,void* io_buf);
+struct dir_entry* dir_read(struct dir* dir);
 
 #endif

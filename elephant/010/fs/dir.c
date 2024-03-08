@@ -246,6 +246,51 @@ Bool delete_dir_entry(struct partition* part,struct dir* pdir,uint_32 ino,void* 
     return false;
 }
 
+struct dir_entry* dir_read(struct dir* dir)
+{
+    if (dir->dir_pos >= dir->inode->i_size) {
+        return NULL;
+    }
+    struct dir_entry* de = (struct dir_entry*)dir->dir_buf;
+    uint_32* all_blocks = sys_malloc(sizeof(uint_32)*140);
+    if (all_blocks == NULL) {
+        printk("dir_read: all_blocks alloc failed\n");
+        return NULL;
+    }
+    for (uint_32 blk = 0 ; blk < 12 ; blk++) {
+        all_blocks[blk] = dir->inode->block[blk];
+    }
+    if(all_blocks[12] != 0) {
+        ide_read(cur_part->hd,all_blocks+12,dir->inode->block[12],1);
+    }
+
+    uint_32 cur_blkidx = 0;
+    uint_32 cur_entry_pos = 0;
+    uint_32 max_de_cnt = BLOCKSIZE / cur_part->sb->dir_entry_size;
+    while(cur_blkidx < 140)
+    {
+        if (all_blocks[cur_blkidx] == 0){
+            continue;
+        }
+        ide_read(cur_part->hd,dir->dir_buf,all_blocks[cur_blkidx],1);
+
+        for (uint_32 d_off = 0 ; d_off < max_de_cnt ; d_off++)
+        {
+            if ((de+d_off)->ftype == FT_UNKNOWN) continue;
+            if (cur_entry_pos != dir->dir_pos) {
+                cur_entry_pos += cur_part->sb->dir_entry_size;
+                continue;
+            }
+
+            dir->dir_pos += cur_part->sb->dir_entry_size;
+            return (de+d_off);
+        }
+        cur_blkidx++;
+    }
+
+    sys_free(all_blocks);
+    return NULL;
+}
 
 
 

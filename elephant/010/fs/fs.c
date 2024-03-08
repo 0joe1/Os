@@ -558,5 +558,13 @@ int_32 sys_closedir(struct dir* dir)
     return ret;
 }
 
+struct dir_entry* sys_readdir(struct dir* dir) {
+    ASSERT(dir!=NULL);
+    return dir_read(dir);
+}
+
+void sys_rewinddir(struct dir* dir) {
+    dir->dir_pos = 0;
+}
 
 

@@ -61,5 +61,6 @@ int_32 sys_unlink(const char* filename);
 int_32 sys_mkdir(const char* pathname);
 struct dir* sys_opendir(const char* pathname);
 int_32 sys_closedir(struct dir* dir);
-
+struct dir_entry* sys_readdir(struct dir* dir);
+void sys_rewinddir(struct dir* dir); 
 #endif
