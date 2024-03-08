@@ -272,6 +272,7 @@ int_32 search_file(const char* filename,struct path_search_record* record)
             grandfather = record->p_dir->inode->ino;
             close_dir(record->p_dir);
             record->p_dir = open_dir(cur_part,de.ino);
+            memset(cur_name,0,sizeof(cur_name));
             if (subpath) {
                 subpath = path_parse(subpath,cur_name);
             }
@@ -522,7 +523,40 @@ int_32 sys_mkdir(const char* pathname)
     return 0;
 }
 
+struct dir* sys_opendir(const char* pathname)
+{
+    if (pathname[0]=='/' && (pathname[1]==0 || pathname[1]=='.')) {
+        // 真是个自欺欺人的简陋实现
+        return &root;
+    }
+    struct path_search_record record;
+    memset(&record,0,sizeof(record));
+    struct dir* ret = NULL;
+    int_32 dir_ino = search_file(pathname,&record);
+    if (dir_ino == -1) {
+        printk("can't find dir you want to open\n");
+        printk("searched_path:%s/n",record.searched_path);
+        return NULL;
+    }
+    if (record.ftype != FT_DIRECTORY) {
+        printk("opendir only open dir\n");
+        return NULL;
+    }
 
+    ret = open_dir(cur_part,dir_ino);
+    close_dir(record.p_dir);
+    return ret;
+}
+
+int_32 sys_closedir(struct dir* dir)
+{
+    int_32 ret = -1;
+    if (dir != NULL) {
+        close_dir(dir);
+        ret = 0;
+    }
+    return ret;
+}
 
 
 

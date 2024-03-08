@@ -25,21 +25,16 @@ int main(void){
     put_str("kernel starting...\n");
     init();
 
-    printf("/dir1/subdir1 create %s!\n", \
-    sys_mkdir("/dir1/subdir1") == 0 ? "done" : "fail");
-    printf("/dir1 create %s!\n", sys_mkdir("/dir1") == 0 ? "done" : "fail");
-    printf("now, /dir1/subdir1 create %s!\n", \
-    sys_mkdir("/dir1/subdir1") == 0 ? "done" : "fail");
-    int fd = sys_open("/dir1/subdir1/file2", O_CREAT|O_RDWT);
-    if (fd != -1) {
-        printf("/dir1/subdir1/file2 create done!\n");
-        sys_write(fd, "Catch me if you can!\n", 21);
-        sys_lseek(fd, 0, SEEK_SET);
-        char buf[32];
-        memset(buf,0,32);
-        sys_read(fd, buf, 21);
-        printf("/dir1/subdir1/file2 says:\n%s", buf);
-        sys_close(fd);
+    struct dir* p_dir = sys_opendir("/dir1/subdir1");
+    if (p_dir) {
+        printf("/dir1/subdir1 open done!\n");
+        if (sys_closedir(p_dir) == 0) {
+            printf("/dir1/subdir1 close done!\n");
+        } else {
+            printf("/dir1/subdir1 close fail!\n");
+        }
+    } else {
+        printf("/dir1/subdir1 open fail!\n");
     }
     while(1);
     return 0;
