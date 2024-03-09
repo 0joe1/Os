@@ -25,14 +25,15 @@ int main(void){
     put_str("kernel starting...\n");
     init();
 
-    char cwd_buf[32];
-    memset(cwd_buf,0,sizeof(cwd_buf));
-    sys_getcwd(cwd_buf, 32);
-    printf("cwd:%s\n", cwd_buf);
-    sys_chdir("/dir1");
-    printf("change cwd now\n");
-    sys_getcwd(cwd_buf, 32);
-    printf("cwd:%s\n", cwd_buf);
+    struct stat obj_stat;
+    sys_stat("/", &obj_stat);
+    printf("/`s info\ni_no:%d\nsize:%d\nfiletype:%s\n", \
+           obj_stat.st_ino, obj_stat.st_fsize, \
+           obj_stat.st_ftype == 2 ? "directory" : "regular");
+    sys_stat("/dir1", &obj_stat);
+    printf("/dir1`s info\ni_no:%d\nsize:%d\nfiletype:%s\n", \
+           obj_stat.st_ino, obj_stat.st_fsize, \
+           obj_stat.st_ftype == 2 ? "directory" : "regular");
 
     while(1);
     return 0;

@@ -42,6 +42,12 @@ struct path_search_record {
     struct dir* p_dir;
 };
 
+struct stat {
+    uint_32 st_ino;
+    uint_32 st_fsize;
+    enum filetype st_ftype;
+};
+
 void fs_format(struct partition*);
 void fs_init(void);
 Bool mount_partition(struct list_elm* pt_elm,int arg);
@@ -66,5 +72,6 @@ void sys_rewinddir(struct dir* dir);
 int_32 sys_rmdir(const char* pathname);
 int_32 sys_getcwd(char* buf,uint_32 size);
 int_32 sys_chdir(const char* path);
+int_32 sys_stat(const char* path,struct stat* fstat);
 
 #endif

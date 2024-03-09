@@ -252,9 +252,12 @@ int_32 search_file(const char* filename,struct path_search_record* record)
 {
     const char* subpath = filename;
     char cur_name[FILENAME_MAXLEN];
+    memset(cur_name,0,sizeof(cur_name));
     struct dir_entry de;
+    memset(&de,0,sizeof(de));
 
     record->p_dir = &root;
+    record->ftype = FT_DIRECTORY;
     uint_32 grandfather = record->p_dir->inode->ino;
     subpath = path_parse(subpath,cur_name);
     while (*cur_name)
@@ -656,5 +659,22 @@ int_32 sys_chdir(const char* path)
     return 0;
 }
 
+int_32 sys_stat(const char* path,struct stat* fstat)
+{
+    struct path_search_record record;
+    int_32 ino = search_file(path,&record);
+    if (ino == -1) {
+        printk("sys_stat: search_file failed\n");
+        return -1;
+    }
+
+    struct inode* inode = inode_open(cur_part,ino);
+    fstat->st_ino   = ino;
+    fstat->st_fsize = inode->i_size;
+    fstat->st_ftype = record.ftype;
+
+    close_dir(record.p_dir);
+    return 0;
+}
 
 
