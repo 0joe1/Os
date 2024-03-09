@@ -74,6 +74,7 @@ struct task_struct {
     struct virt_addr usrprog_vaddr;
     uint_32 fd_table[MAX_OPEN_FILES_PROC];
     struct mem_block_desc usr_block_desc[DESC_CNT];
+    uint_32 cwd_inode_nr;
     uint_32 kmagic;
 };
 

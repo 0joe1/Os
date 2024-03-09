@@ -62,5 +62,9 @@ int_32 sys_mkdir(const char* pathname);
 struct dir* sys_opendir(const char* pathname);
 int_32 sys_closedir(struct dir* dir);
 struct dir_entry* sys_readdir(struct dir* dir);
-void sys_rewinddir(struct dir* dir); 
+void sys_rewinddir(struct dir* dir);
+int_32 sys_rmdir(const char* pathname);
+int_32 sys_getcwd(char* buf,uint_32 size);
+int_32 sys_chdir(const char* path);
+
 #endif

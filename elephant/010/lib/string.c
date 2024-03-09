@@ -71,10 +71,10 @@ char* strchr(const char* str,uint_8 ch)
     return NULL;
 }
 
-const char* strrchr(const char* str,char ch)
+char* strrchr(const char* str,char ch)
 {
     ASSERT(str != NULL);
-    char* ret;
+    char* ret = NULL;
     while(*str) {
         if (*str == ch)
             ret = (char*)str;

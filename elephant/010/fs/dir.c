@@ -292,6 +292,86 @@ struct dir_entry* dir_read(struct dir* dir)
     return NULL;
 }
 
+int_32 dir_remove(struct dir* pdir,struct dir* cdir)
+{
+    struct inode* inode = cdir->inode;
+    for (uint_32 blkidx = 1 ; blkidx < 13 ; blkidx++) {
+        ASSERT(inode->block[blkidx] == 0);
+    }
+
+    void* io_buf = sys_malloc(BLOCKSIZE*2);
+    if (io_buf == NULL) {
+        printk("dir_remove: io_buf alloc failed\n");
+        return -1;
+    }
+
+    delete_dir_entry(cur_part,pdir,inode->ino,io_buf);
+    inode_release(cur_part,inode->ino);
+
+    close_dir(cdir);
+    sys_free(io_buf);
+    return 0;
+}
+
+Bool dir_empty(struct partition* part,struct dir* dir) {
+    return (dir->inode->i_size == 2*part->sb->dir_entry_size);
+}
+
+uint_32 get_parent_inode_nr(struct partition* part,uint_32 cino,void* io_buf)
+{
+    struct inode* cinode = inode_open(part,cino);
+    struct dir_entry* de = io_buf;
+    ide_read(part->hd,io_buf,cinode->block[0],1);
+    inode_close(cinode);
+    return de[1].ino;
+}
+
+Bool get_child_dirname(struct partition* part,uint_32 pino,uint_32 cino,char* path,void* io_buf)
+{
+    struct inode* p_inode = inode_open(part,pino);
+    if (p_inode == NULL) {
+        printk("get_child_dirname: p_inode open failed\n");
+        return 0;
+    }
+
+    uint_32 blkcnt = 12;
+    uint_32* all_blocks = sys_malloc(sizeof(uint_32)*140);
+    if (all_blocks == NULL) {
+        printk("get_child_dirname: sys_malloc failed\n");
+        return 0;
+    }
+    for (uint_32 blk = 0 ; blk < 12 ; blk++) {
+        all_blocks[blk] = p_inode->block[blk];
+    }
+    if (p_inode->block[12] != 0) {
+        ide_read(part->hd,all_blocks+12,p_inode->block[12],1);
+        blkcnt = 140;
+    }
+
+    uint_32 max_dir_cnt = BLOCKSIZE / part->sb->dir_entry_size;
+    struct dir_entry* de = io_buf;
+    for (uint_32 blk = 0 ; blk < blkcnt ; blk++)
+    {
+        if (all_blocks[blk] == 0) continue;
+        ide_read(cur_part->hd,io_buf,all_blocks[blk],1);
+        for (uint_32 d_off = 0 ; d_off < max_dir_cnt ; d_off++)
+        {
+            if ((de+d_off)->ftype == FT_UNKNOWN) continue;
+            if ((de+d_off)->ino == cino) {
+                strcat(path,"/");
+                strcat(path,(de+d_off)->filename);
+                sys_free(all_blocks);
+                return 1;
+            }
+        }
+    }
+
+    sys_free(all_blocks);
+    return false;
+}
+
+
+
 
 
 

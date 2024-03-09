@@ -567,4 +567,94 @@ void sys_rewinddir(struct dir* dir) {
     dir->dir_pos = 0;
 }
 
+int_32 sys_rmdir(const char* pathname)
+{
+    struct path_search_record record;
+    int_32 ino = search_file(pathname,&record);
+    if (ino == -1) {
+        printk("sys_rmdir: can't find dir you want to delete\n");
+        return -1;
+    }
+    if (record.ftype != FT_DIRECTORY) {
+        printk("sys_rmdir: only remove empty directory\n");
+        return -1;
+    }
+
+    struct dir* cur_dir = open_dir(cur_part,ino);
+    ASSERT(cur_dir != NULL);
+    if (!dir_empty(cur_part,cur_dir)) {
+        printk("sys_rmdir:the dir is not empty\n");
+        return -1;
+    }
+
+    int_32 ret = dir_remove(record.p_dir,cur_dir);
+
+    close_dir(record.p_dir);
+    return ret;
+}
+
+int_32 sys_getcwd(char* buf,uint_32 size)
+{
+    ASSERT(buf != NULL);
+    memset(buf,0,size);
+    void* io_buf = sys_malloc(BLOCKSIZE);
+    if (io_buf == NULL) {
+        printk("sys_getcwd: io_buf malloc failed\n");
+        return -1;
+    }
+
+    struct task_struct* cur = running_thread();
+    uint_32 cino=cur->cwd_inode_nr,pino=0;
+    if (cino == 0) {
+        buf[0] = '/';
+        buf[1] = 0;
+        return 0;
+    }
+    char reverse_path[MAX_PATH_LEN];
+    memset(reverse_path,0,sizeof(reverse_path));
+    while((cino))
+    {
+        pino = get_parent_inode_nr(cur_part,cino,io_buf);
+        memset(io_buf,0,BLOCKSIZE);
+        get_child_dirname(cur_part,pino,cino,reverse_path,io_buf);
+        cino = pino;
+    }
+    if (strlen(reverse_path)+1 >= size) {
+        printk("out of bufsize\n");
+        return -1;
+    }
+
+    char* dirname;
+    while ((dirname = strrchr(reverse_path,'/')) != NULL)
+    {
+        strcat(buf+strlen(buf),dirname);
+        *dirname = 0;
+    }
+
+    sys_free(io_buf);
+    return 0;
+}
+
+int_32 sys_chdir(const char* path)
+{
+    struct path_search_record record;
+    int_32 dino = search_file(path,&record);
+    if (dino == -1) {
+        close_dir(record.p_dir);
+        printk("sys_chdir: no such directory\n");
+        return -1;
+    }
+    if (record.ftype != FT_DIRECTORY) {
+        close_dir(record.p_dir);
+        printk("sys_chdir: is a file\n");
+        return -1;
+    }
+
+    struct task_struct* cur = running_thread();
+    cur->cwd_inode_nr = dino;
+    close_dir(record.p_dir);
+    return 0;
+}
+
+
 

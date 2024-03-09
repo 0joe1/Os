@@ -52,6 +52,7 @@ void init_thread(struct task_struct* pcb,char* name,uint_32 priority)
         if (fd < 3) pcb->fd_table[fd]=fd;
         else pcb->fd_table[fd] = -1;   //不能是0，0是标准输入
     }
+    pcb->cwd_inode_nr = 0;
     pcb->kmagic = KMAGIC;
 }
 
