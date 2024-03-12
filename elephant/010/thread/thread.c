@@ -8,8 +8,11 @@
 #include "print.h"
 #include "process.h"
 #include "sync.h"
+#include "fork.h"
 
 #define MAIN_THREAD_PRIO 31
+
+extern void init(void);
 
 struct list thread_ready_list;
 struct list all_thread_list;
@@ -19,12 +22,15 @@ pid_t sys_pid;
 
 struct task_struct* idle_pcb;
 
-void asign_pid(struct task_struct* pcb)
+static void asign_pid(struct task_struct* pcb)
 {
     lock_acquire(&pid_lock);
     sys_pid++;
     pcb->pid = sys_pid;
     lock_release(&pid_lock);
+}
+void fork_pid(struct task_struct* pcb){
+    asign_pid(pcb);
 }
 
 void kernel_thread(thread_func* func,void* arg){
@@ -43,6 +49,7 @@ void init_thread(struct task_struct* pcb,char* name,uint_32 priority)
     pcb->kstack_p = (void*)((uint_32)pcb + PAGESIZE);
     strcpy((char*)pcb->name,name);
     asign_pid(pcb);
+    pcb->ppid = -1;
     pcb->priority = priority;
     pcb->ticks    = priority;
     pcb->elapsed_ticks = 0;
@@ -58,8 +65,8 @@ void init_thread(struct task_struct* pcb,char* name,uint_32 priority)
 
 void thread_create(struct task_struct* pcb,thread_func* func,void* arg)
 {
-    pcb->kstack_p -= sizeof(struct intr_stack);
-    pcb->kstack_p -= sizeof(struct thread_stack);
+    pcb->kstack_p = (uint_32*)((uint_32)pcb->kstack_p - sizeof(struct intr_stack));
+    pcb->kstack_p = (uint_32*)((uint_32)pcb->kstack_p - sizeof(struct thread_stack));
 
     struct thread_stack* thread = (struct thread_stack*)pcb->kstack_p;
     thread->eip  = kernel_thread;
@@ -104,19 +111,10 @@ void schedule(void)
 void make_main_thread()
 {
     struct task_struct* main_pcb = running_thread();
-    strcpy((char*)main_pcb->name,"main thread");
-    asign_pid(main_pcb);
-    main_pcb->kstack_p = (void*)((uint_32)main_pcb + PAGESIZE);
+    init_thread(main_pcb,"main_thread",21);
     main_pcb->status = TASK_RUNNING;
-    main_pcb->priority = MAIN_THREAD_PRIO;
-    main_pcb->ticks  = MAIN_THREAD_PRIO;
-    main_pcb->elapsed_ticks = 0;
+    ASSERT(!elem_find(&all_thread_list,&main_pcb->all_list_tag));
     list_append(&all_thread_list,&main_pcb->all_list_tag);
-    for (uint_32 fd = 0 ; fd < MAX_OPEN_FILES_PROC ; fd++) {
-        if (fd < 3) main_pcb->fd_table[fd]=fd;
-        else main_pcb->fd_table[fd] = -1;   //不能是0，0是标准输入
-    }
-    main_pcb->kmagic = KMAGIC;
 }
 
 void thread_init(void)
@@ -125,6 +123,7 @@ void thread_init(void)
     lock_init(&pid_lock);
     list_init(&all_thread_list);
     list_init(&thread_ready_list);
+    process_execute("init",init);
     make_main_thread();
     idle_pcb = thread_start("idle",10,idle,NULL);
     put_str("thread init done\n");
@@ -167,6 +166,7 @@ void idle(void* arg)
     }
 }
 
+
 void thread_yield(void)
 {
     struct task_struct* cur = running_thread();
@@ -175,5 +175,13 @@ void thread_yield(void)
     list_append(&thread_ready_list,&cur->wait_tag);
     schedule();
     intr_set_status(old_status);
+}
+
+
+int_32 fdlocal2gloabl(int_32 local_fd)
+{
+    struct task_struct* cur = running_thread();
+    int_32 _fd = cur->fd_table[local_fd];
+    return _fd;
 }
 

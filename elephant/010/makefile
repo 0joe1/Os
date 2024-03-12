@@ -43,7 +43,8 @@ OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/keyboard.o $(BUILD)/ioqueue.o $(BUILD)/tss.o \
 		 $(BUILD)/process.o  $(BUILD)/syscall-init.o $(BUILD)/syscall.o \
 		 $(BUILD)/stdio.o $(BUILD)/ide.o $(BUILD)/stdio-kernel.o \
-		 $(BUILD)/fs.o $(BUILD)/file.o $(BUILD)/inode.o $(BUILD)/dir.o
+		 $(BUILD)/fs.o $(BUILD)/file.o $(BUILD)/inode.o $(BUILD)/dir.o \
+		 $(BUILD)/fork.o
 
 ################# 汇编代码编译 ####################
 %.bin:%.asm
@@ -150,6 +151,10 @@ $(BUILD)/file.o: fs/file.c fs/file.h
 
 $(BUILD)/dir.o: fs/dir.c fs/dir.h
 	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/fork.o: userprog/fork.c userprog/fork.h
+	$(CC) $(CFLAGS) $< -o $@
+
 
 ################ 链接所有目标文件 ###################
 $(BUILD)/kernel.bin: $(OBJS_O)

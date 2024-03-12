@@ -12,17 +12,17 @@
 #include "ide.h"
 #include "fs.h"
 
-void init()
+void init_all()
 {
     put_str("init all\n");
     idt_init();
     mem_init();
-    thread_init();
     timer_init();
-    console_init();
     keyboard_init();
     tss_init();
     syscall_init();
+    thread_init();
+    console_init();
     ide_init();
     fs_init();
 }

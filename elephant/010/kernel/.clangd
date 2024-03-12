@@ -4,8 +4,9 @@
     - -I../lib
     - -I../lib/kernel
     - -I../lib/usr
-    - -I../userprog
     - -I../device
     - -I../fs
+    - -I../userprog
+    - -I../kernel
     - -m32
 

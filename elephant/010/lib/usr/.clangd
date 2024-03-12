@@ -4,4 +4,5 @@
     - -I../../lib/kernel
     - -I../../kernel
     - -I../../device
+    - -I../../thread
     - -m32

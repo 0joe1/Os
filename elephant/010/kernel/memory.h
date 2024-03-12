@@ -49,6 +49,7 @@ static void page_table_add(void* _vaddr,void* _paddr);
 void* malloc_page(enum pool_flag pf,uint_32 pcnt);
 void* get_kernel_pages(uint_32 pcnt);
 void* get_a_page(enum pool_flag,uint_32 vaddr);
+void* get_a_page_without_opvaddrbitmap(enum pool_flag pf,uint_32 vaddr);
 uint_32 v2p(void* vaddr);
 void block_desc_init(struct mem_block_desc*);
 struct mem_block* arena2block(struct arena* arena,uint_32 idx);

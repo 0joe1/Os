@@ -17,6 +17,7 @@ void create_page_dir(struct task_struct* pcb)
     page_dir_vaddr[1023] = v2p(page_dir_vaddr)|PAGE_RW_W|PAGE_US_U|PAGE_P;
     pcb->pdir = page_dir_vaddr;
 }
+
 void usr_vaddr_init(struct task_struct* pcb)
 {
     uint_32 btmp_pgsize = DIV_ROUND_UP((0xc0000000 - USR_VADDR_START)/PAGESIZE/8,PAGESIZE);
@@ -50,7 +51,7 @@ void start_process(void* filename)
 {
     void* func = filename;
     struct task_struct* cur = running_thread();
-    cur->kstack_p += sizeof(struct thread_stack);
+    cur->kstack_p = (uint_32*)((uint_32)cur->kstack_p + sizeof(struct thread_stack));
     struct intr_stack* intr = (struct intr_stack*)cur->kstack_p;
     intr->vec_no = 0;
     intr->esi = intr->edi = intr->ebp = intr->esp_dump = 0;
@@ -60,7 +61,7 @@ void start_process(void* filename)
     intr->cs = SELECTOR_U_CODE;
     intr->eip = func;
     intr->eflags = (EFLAG_MBS | EFALG_IOPL_0 | EFLAG_IF_1);
-    intr->esp = get_a_page(PF_USER,USR_STACK_VADDR); 
+    intr->esp = get_a_page(PF_USER,USR_STACK_VADDR);
     asm volatile("movl %0,%%esp;jmp int_exit;"::"g"((uint_32)intr):"memory");
 }
 

@@ -226,6 +226,21 @@ void* get_a_page(enum pool_flag pf,uint_32 vaddr)
     return (void*)vaddr;
 }
 
+void* get_a_page_without_opvaddrbitmap(enum pool_flag pf,uint_32 vaddr)
+{
+    struct pool* m_pool = pf==PF_KERNEL? &kernel_pool : &user_pool;
+    lock_acquire(&m_pool->lock);
+
+    void* paddr = palloc(m_pool);
+    if (paddr == NULL){
+        lock_release(&m_pool->lock);
+        return NULL;
+    }
+    page_table_add((void*)vaddr,paddr);
+    lock_release(&m_pool->lock);
+    return (void*)vaddr;
+}
+
 
 uint_32 v2p(void* vaddr)
 {

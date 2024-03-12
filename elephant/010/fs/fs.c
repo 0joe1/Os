@@ -332,13 +332,6 @@ int_32 sys_open(const char* filename,uint_8 flag)
     return fd;
 }
 
-int_32 fdlocal2gloabl(int_32 local_fd)
-{
-    struct task_struct* cur = running_thread();
-    int_32 _fd = cur->fd_table[local_fd];
-    return _fd;
-}
-
 int_32 sys_close(int_32 fd)
 {
     int_32 ret;

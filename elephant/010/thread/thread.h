@@ -11,7 +11,7 @@
 extern struct list thread_ready_list;
 extern struct list all_thread_list;
 
-typedef int_16 pid_t;
+typedef int_32 pid_t;
 
 typedef void thread_func(void*);
 
@@ -64,6 +64,7 @@ struct task_struct {
     uint_32* kstack_p;
     char name[20];
     pid_t pid;
+    pid_t ppid;
     struct list_elm wait_tag;
     struct list_elm all_list_tag;
     uint_32 ticks;
@@ -78,7 +79,8 @@ struct task_struct {
     uint_32 kmagic;
 };
 
-void asign_pid(struct task_struct* pcb);
+static void asign_pid(struct task_struct* pcb);
+void fork_pid(struct task_struct* pcb);
 void init_thread(struct task_struct* pcb,char* name,uint_32 priority);
 void thread_create(struct task_struct* pcb,thread_func* func,void* arg);
 struct task_struct* thread_start(char* name,uint_32 priority,thread_func* func,void* arg);
@@ -90,5 +92,6 @@ void thread_block(enum task_status stat);
 void thread_unblock(struct task_struct* pcb);
 void idle(void* arg);
 void thread_yield(void);
+int_32 fdlocal2gloabl(int_32 local_fd);
 
 #endif
