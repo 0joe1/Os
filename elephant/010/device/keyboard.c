@@ -3,6 +3,7 @@
 #include "interrupt.h"
 #include "io.h"
 #include "ioqueue.h"
+#include "syscall.h"
 
 #define KDB_BUF_PORT 0x60
 #define IS_DOUBLECHAR(code) ((code<0x0e)||(code==0x29)||(code==0x1a)||(code==0x1b)||(code==0x2b)||(code==0x33)||(code==0x27)||(code==0x28)||(code==0x34)||(code==0x35))
@@ -120,16 +121,18 @@ static void intr_keyboard_handler(void)
              (scancode == alt_r_make)) 
     {
         if (IS_DOUBLECHAR(scancode)) {
-            shift = shift_status;            
+            shift = shift_status;
         } else {
             shift = shift_status ^ caps_lock_status;
         }
 
         uint_8 index = scancode;
         char cur_char = keymap[index][shift];
+        if (ctrl_status && (cur_char=='l' || cur_char=='u')) {
+            cur_char -= 'a';
+        }
         if (cur_char) {
             if (!ioq_full(&kbd_buf)){
-                put_char(cur_char);
                 ioq_putchar(&kbd_buf,cur_char);
             }
             return ;
@@ -142,7 +145,7 @@ static void intr_keyboard_handler(void)
     }
     else
     {
-        put_str("unknown char\n");
+        //put_str("unknown char\n");
     }
 }
 

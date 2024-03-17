@@ -42,9 +42,9 @@ char ioq_getchar(struct ioqueue* ioq)
         ioq_wait(&ioq->consumer);
         lock_release(&ioq->lock);
     }
-    
+
     char ret_char = ioq->buf[ioq->tail];
-    ioq->head = next_pos(ioq->head);
+    ioq->tail = next_pos(ioq->tail);
     if (ioq->producer) {
         wakeup(&ioq->producer);
     }
@@ -61,7 +61,7 @@ void ioq_putchar(struct ioqueue* ioq,char val)
     }
 
     ioq->buf[ioq->head] = val;
-    ioq->tail = next_pos(ioq->tail);
+    ioq->head = next_pos(ioq->head);
     if (ioq->consumer) {
         wakeup(&ioq->consumer);
     }

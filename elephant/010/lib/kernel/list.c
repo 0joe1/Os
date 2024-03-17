@@ -2,6 +2,7 @@
 #include "string.h"
 #include "interrupt.h"
 #include "print.h"
+#include "debug.h"
 
 void list_init(struct list* list)
 {
@@ -26,6 +27,7 @@ void show_list(struct list* list)
 void list_insert_before(struct list_elm* before,struct list_elm* elm)
 {
     enum intr_status old_status = intr_disable();
+    ASSERT(elm != NULL);
     before->prev->next = elm;
     elm->prev = before->prev;
     elm->next = before;
@@ -46,7 +48,6 @@ void list_append(struct list* plist,struct list_elm* elm)
 void list_remove(struct list_elm* elm)
 {
     enum intr_status old_status = intr_disable();
-    
     elm->prev->next = elm->next;
     elm->next->prev = elm->prev;
     intr_set_status(old_status);

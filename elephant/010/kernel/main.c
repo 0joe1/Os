@@ -15,6 +15,7 @@
 #include "fs.h"
 #include "file.h"
 #include "fork.h"
+#include "shell.h"
 
 //void sss(void)
 //{
@@ -33,6 +34,9 @@ int prog_a_pid,prog_b_pid;
 int main(void){
     put_str("kernel starting...\n");
     init_all();
+    intr_enable();
+    cls_screen();
+    print_prompt();
     while(1);
     return 0;
 }
@@ -59,11 +63,12 @@ void u_prog_b(void)
 
 void init(void)
 {
-    pid_t childpid = fork();
-    if (childpid == 0) {
-        printf("Child %d working...\n",getpid());
+    pid_t retpid = fork();
+    if (retpid == 0) {
+        my_shell();
     } else {
-        printf("I am parent %d , my child is %d\n",getpid(),childpid);
+        printf("I am parent %d , my child is %d\n",getpid(),retpid);
+        while(1);
     }
-    while(1);
+    PANIC("should not be here");
 }

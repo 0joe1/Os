@@ -81,7 +81,7 @@ char* strrchr(const char* str,char ch)
         str++;
     }
 
-    return *ret==NULL ? NULL : ret;
+    return ret;
 }
 
 char* strcat(char* dst_,const char* src_)

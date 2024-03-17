@@ -9,6 +9,8 @@
 #include "process.h"
 #include "sync.h"
 #include "fork.h"
+#include "stdio.h"
+#include "fs.h"
 
 #define MAIN_THREAD_PRIO 31
 
@@ -183,5 +185,76 @@ int_32 fdlocal2gloabl(int_32 local_fd)
     struct task_struct* cur = running_thread();
     int_32 _fd = cur->fd_table[local_fd];
     return _fd;
+}
+
+void pad_print(char* buf,uint_32 bufsize,void* ptr,char format)
+{
+    memset(buf,' ',bufsize);
+    buf[bufsize - 1] = '\0';
+
+    switch(format) {
+        case 's':
+            sprintf(buf,"%s",(char*)ptr);
+            break;
+        case 'd':
+            sprintf(buf,"%d",*(uint_32*)ptr);
+            break;
+        case 'x':
+            sprintf(buf,"%x",*(uint_32*)ptr);
+        case 'c':
+            sprintf(buf,"%c",*(char*)ptr);
+    }
+    sys_write(stdout,buf,bufsize);
+}
+
+Bool elm2thread_info(struct list_elm* elm,int arg)
+{
+    struct task_struct* pcb = mem2entry(struct task_struct,elm,all_list_tag);
+    char buf[16];
+    pad_print(buf,16,&pcb->pid,'d');
+    if (pcb->ppid == -1) {
+        pad_print(buf,16,"NULL",'s');
+    } else {
+        pad_print(buf,16,&pcb->ppid,'d');
+    }
+
+    pad_print(buf,16,&pcb->ticks,'d');
+
+    switch(pcb->status)
+    {
+        case TASK_RUNNING:
+            pad_print(buf,16,"TASK_RUNNING",'s');
+            break;
+        case TASK_DIED:
+            pad_print(buf,16,"TASK_DIED",'s');
+            break;
+        case TASK_READY:
+            pad_print(buf,16,"TASK_READY",'s');
+            break;
+        case TASK_BLOCKED:
+            pad_print(buf,16,"TASK_BLOCKED",'s');
+            break;
+        case TASK_HANGING:
+            pad_print(buf,16,"TASK_HANGING",'s');
+            break;
+        case TASK_WAITING:
+            pad_print(buf,16,"TASK_WAITING",'s');
+            break;
+    }
+
+    ASSERT(strlen(pcb->name) < 16);
+    char name_buf[16];
+    strcpy(name_buf,pcb->name);
+    strcat(name_buf,"\n");
+    pad_print(buf,16,name_buf,'s');
+    return false;
+}
+
+void sys_ps(void)
+{
+    const char* title = "PID             PPID             TICKS             "\
+                        "STAT            COMMANDn\n";
+    sys_write(stdout,title,strlen(title)+1);
+    list_traversal(&all_thread_list,elm2thread_info,NULL);
 }
 

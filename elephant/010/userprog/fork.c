@@ -28,6 +28,7 @@ static int_32 copy_pcb(struct task_struct* parent,struct task_struct* child)
     child->status   = TASK_READY;
     child->all_list_tag.prev = child->all_list_tag.next = NULL;
     child->wait_tag.prev = child->wait_tag.next = NULL;
+    block_desc_init(child->usr_block_desc); //没有这个，free_list的head指向parent的tail，有种刻舟求剑的感觉
 
     uint_32 vaddr_btmp_size = DIV_ROUND_UP((0xc0000000 - USR_VADDR_START)/PAGESIZE/8,PAGESIZE);
     child->usrprog_vaddr.btmp.bits = get_kernel_pages(vaddr_btmp_size);

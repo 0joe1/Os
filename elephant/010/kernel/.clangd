@@ -7,6 +7,7 @@
     - -I../device
     - -I../fs
     - -I../userprog
+    - -I../she
     - -I../kernel
     - -m32
 

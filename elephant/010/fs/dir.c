@@ -16,6 +16,9 @@ void open_root_dir(struct partition* part)
 
 struct dir* open_dir(struct partition* part,uint_32 ino)
 {
+    if (ino == 0) {
+        return &root;
+    }
     struct dir* new_dir = sys_malloc(sizeof(struct dir));
     new_dir->inode = inode_open(part,ino);
     new_dir->dir_pos = 0;
@@ -26,6 +29,8 @@ struct dir* open_dir(struct partition* part,uint_32 ino)
 void close_dir(struct dir* dir)
 {
     if (dir == &root) {
+        root.dir_pos = 0;
+        memset(root.dir_buf,0,512);
         return ;
     }
     inode_close(dir->inode);

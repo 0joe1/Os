@@ -2,6 +2,7 @@
   Add:
     - -I../thread
     - -I../lib
+    - -I../lib/usr
     - -I../lib/kernel
     - -I../kernel
     - -I../fs

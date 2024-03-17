@@ -9,6 +9,8 @@
 #include "list.h"
 #include "file.h"
 #include "console.h"
+#include "keyboard.h"
+#include "ioqueue.h"
 
 struct partition* cur_part;
 struct dir root;
@@ -250,6 +252,7 @@ uint_32 path_depth_cnt(const char* path)
 
 int_32 search_file(const char* filename,struct path_search_record* record)
 {
+    memset(record,0,sizeof(struct path_search_record));
     const char* subpath = filename;
     char cur_name[FILENAME_MAXLEN];
     memset(cur_name,0,sizeof(cur_name));
@@ -369,17 +372,38 @@ int_32 sys_write(uint_32 fd,const void* buf,uint_32 count)
 
 int_32 sys_read(uint_32 fd,void* buf,uint_32 count)
 {
-    uint_32 _fd = fdlocal2gloabl(fd);
-    if (_fd == -1) {
-        printk("can't find file in file table\n");
+    ASSERT(buf != NULL);
+    if (fd == stdout || fd == stderr) {
+        printk("sys_read: wrong fd\n");
         return -1;
     }
-    struct file* f = &file_table[_fd];
-    if (!(f->flag&O_RDONLY || f->flag&O_RDWT)) {
-        printk("can't read without read flag\n");
-        return -1;
+
+    int_32 ret = -1;
+    if (fd == stdin)
+    {
+        char* buffer = buf;
+        uint_32 bytes_read = 0;
+        while(count--) {
+            *buffer++ = ioq_getchar(&kbd_buf);
+            bytes_read++;
+        }
+        ret = count - bytes_read;
     }
-    return file_read(f,buf,count);
+    else
+    {
+        uint_32 _fd = fdlocal2gloabl(fd);
+        if (_fd == -1) {
+            printk("can't find file in file table\n");
+            return -1;
+        }
+        struct file* f = &file_table[_fd];
+        if (!(f->flag&O_RDONLY || f->flag&O_RDWT)) {
+            printk("can't read without read flag\n");
+            return -1;
+        }
+        ret = file_read(f,buf,count);
+    }
+    return ret;
 }
 
 int_32 sys_lseek(uint_32 fd,int_32 offset,uint_8 whence)
@@ -449,7 +473,7 @@ int_32 sys_unlink(const char* filename)
 
 int_32 sys_mkdir(const char* pathname)
 {
-    void* buf = sys_malloc(BLOCKSIZE);
+    void* buf = sys_malloc(BLOCKSIZE*2); //惨痛经历：只因sync_dir_entry 用尺寸1024
     if (buf == NULL) {
         printk("sys_mkdir:buf malloc failed\n");
         return -1;
@@ -669,5 +693,4 @@ int_32 sys_stat(const char* path,struct stat* fstat)
     close_dir(record.p_dir);
     return 0;
 }
-
 

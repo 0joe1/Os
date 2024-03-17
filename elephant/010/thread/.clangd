@@ -6,4 +6,5 @@
     - -I../device
     - -I../userprog
     - -I../thread
+    - -I../fs
     - -m32

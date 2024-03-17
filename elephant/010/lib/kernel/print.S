@@ -11,6 +11,7 @@ global put_char
 global put_str
 global put_int
 global set_cursor
+global cls_screen
 
     put_char:
         pushad
@@ -197,3 +198,34 @@ set_cursor
     pop ebp
     ret
 
+;------------------------------------------------------------
+cls_screen
+    pushad
+    mov ax,SELECTOR_VIDEO
+    mov gs,ax
+
+    mov ebx,0
+    mov ecx,80*25
+
+.clear
+    mov word[gs:ebx],0x0720
+    add ebx,2
+    loop .clear
+    mov ebx,0
+
+    mov dx,0x3d4
+    mov al,0xe
+    out dx,al
+    inc dx
+    mov al,bh
+    out dx,al
+
+    mov dx,0x3d4
+    mov al,0xf
+    out dx,al
+    inc dx
+    mov al,bl
+    out dx,al
+
+    popad
+    ret

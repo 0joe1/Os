@@ -9,7 +9,8 @@ FS       := fs
 
 CC 		= gcc
 LIB     = -I lib/ -I $(LIBK)/ -I $(LIBU) -I $(KERNEL) -I $(DEVICE) -I $(THREAD) \
-		  -I $(USERPROG) -I $(FS)
+		  -I $(USERPROG) -I $(FS) -I she
+
 #LDFALGS := -Ttext 0xc0001500 -e main
 ASFLAGS = -f elf -w-orphan-label -g
 CFLAGS  = -Wall $(LIB) -c -fno-builtin -m32 -fno-stack-protector \
@@ -31,7 +32,7 @@ image: ${OBJS_BIN}
 #kernel.bin文件写入boot.img磁盘映像文件的第9个扇区。
 	dd if=$(BUILD)/kernel.bin of=boot.img bs=512 count=200 seek=9 conv=notrunc
 #创建 hd80M.img
-	#cp hd80M.bak2 hd80M.img
+	cp hd80M.bak2 hd80M.img
 #@-表示忽略删除过程中出现的错误。
 	@-rm -rf *.bin	
   
@@ -41,10 +42,10 @@ OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/string.o $(BUILD)/switch.o $(BUILD)/list.o \
 		 $(BUILD)/sync.o $(BUILD)/console.o $(BUILD)/thread.o \
 		 $(BUILD)/keyboard.o $(BUILD)/ioqueue.o $(BUILD)/tss.o \
-		 $(BUILD)/process.o  $(BUILD)/syscall-init.o $(BUILD)/syscall.o \
+		 $(BUILD)/process.o  $(BUILD)/syscall-init.o $(BUILD)/she.o\
 		 $(BUILD)/stdio.o $(BUILD)/ide.o $(BUILD)/stdio-kernel.o \
 		 $(BUILD)/fs.o $(BUILD)/file.o $(BUILD)/inode.o $(BUILD)/dir.o \
-		 $(BUILD)/fork.o
+		 $(BUILD)/fork.o  $(BUILD)/syscall.o $(BUILD)/buildin_cmd.o
 
 ################# 汇编代码编译 ####################
 %.bin:%.asm
@@ -155,6 +156,11 @@ $(BUILD)/dir.o: fs/dir.c fs/dir.h
 $(BUILD)/fork.o: userprog/fork.c userprog/fork.h
 	$(CC) $(CFLAGS) $< -o $@
 
+$(BUILD)/she.o: she/shell.c she/shell.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/buildin_cmd.o: she/buildin_cmd.c she/buildin_cmd.h
+	$(CC) $(CFLAGS) $< -o $@
 
 ################ 链接所有目标文件 ###################
 $(BUILD)/kernel.bin: $(OBJS_O)

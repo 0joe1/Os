@@ -93,5 +93,8 @@ void thread_unblock(struct task_struct* pcb);
 void idle(void* arg);
 void thread_yield(void);
 int_32 fdlocal2gloabl(int_32 local_fd);
+void pad_print(char* buf,uint_32 bufsize,void* ptr,char format);
+Bool elm2thread_info(struct list_elm* elm,int arg);
+void sys_ps(void);
 
 #endif
