@@ -27,6 +27,7 @@ enum SYSCALL {
     SYS_REWINDDIR,
     SYS_STAT,
     SYS_PS,
+    SYS_EXECV
 };
 
 uint_32 getpid(void);
@@ -51,5 +52,6 @@ struct dir_entry* readdir(struct dir* dir);
 void rewinddir(struct dir* dir);
 int_32 stat(const char* path,struct stat* fstat);
 void ps(void);
+int_32 execv(const char* pathname,char** argv);
 
 #endif

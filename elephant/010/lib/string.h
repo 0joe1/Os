@@ -5,6 +5,7 @@
 #define NULL 0
 void memset(void* dst_,uint_8 value,uint_32 size);
 void memcpy(void* dst_,void* src_,uint_32 size);
+int memcmp(const void* a_,const void* b_,uint_32 size);
 
 char* strcpy(char* dst_,const char* src_);
 uint_32 strlen(const char* str);

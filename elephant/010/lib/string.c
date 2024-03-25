@@ -1,9 +1,9 @@
 #include "string.h"
-#include "debug.h"
+#include "assert.h"
 
 void memset(void* dst_,uint_8 value,uint_32 size)
 {
-    ASSERT(dst_ != NULL);
+    assert(dst_ != NULL);
     uint_8* p = dst_;
     while (size--){
         *p = value;
@@ -13,7 +13,7 @@ void memset(void* dst_,uint_8 value,uint_32 size)
 
 void memcpy(void* dst_,void* src_,uint_32 size)
 {
-    ASSERT(dst_ != NULL && src_ != NULL);
+    assert(dst_ != NULL && src_ != NULL);
     uint_8* dst = dst_;
     const uint_8* src = src_;
     while (size--){
@@ -23,7 +23,7 @@ void memcpy(void* dst_,void* src_,uint_32 size)
 
 int memcmp(const void* a_,const void* b_,uint_32 size)
 {
-    ASSERT(a_ != NULL && b_ != NULL);
+    assert(a_ != NULL && b_ != NULL);
     const uint_8* a = a_;
     const uint_8* b = b_;
     while (size--) {
@@ -37,7 +37,7 @@ int memcmp(const void* a_,const void* b_,uint_32 size)
 
 char* strcpy(char* dst_,const char* src_)
 {
-    ASSERT(dst_ != NULL && src_ != NULL);
+    assert(dst_ != NULL && src_ != NULL);
     char* ret = dst_;
     while ((*dst_++ = *src_++)) ;   //这代码有点妙
     return ret;
@@ -45,7 +45,7 @@ char* strcpy(char* dst_,const char* src_)
 
 uint_32 strlen(const char* str)
 {
-    ASSERT(str != NULL);
+    assert(str != NULL);
     const char* p = str;
     while (*p) p++;
     return (p-str);
@@ -53,7 +53,7 @@ uint_32 strlen(const char* str)
 
 int_8 strcmp(const char* a,const char* b)
 {
-    ASSERT(a != NULL && b != NULL);
+    assert(a != NULL && b != NULL);
     while (*a != 0 && *a == *b){
         a++;
         b++;
@@ -63,7 +63,7 @@ int_8 strcmp(const char* a,const char* b)
 
 char* strchr(const char* str,uint_8 ch)
 {
-    ASSERT(str != NULL);
+    assert(str != NULL);
     while(*str) {
         if (*str++ == ch)
             return (char*)str;
@@ -73,7 +73,7 @@ char* strchr(const char* str,uint_8 ch)
 
 char* strrchr(const char* str,char ch)
 {
-    ASSERT(str != NULL);
+    assert(str != NULL);
     char* ret = NULL;
     while(*str) {
         if (*str == ch)
@@ -86,7 +86,7 @@ char* strrchr(const char* str,char ch)
 
 char* strcat(char* dst_,const char* src_)
 {
-    ASSERT(dst_ != NULL && src_ != NULL);
+    assert(dst_ != NULL && src_ != NULL);
     char* ret = dst_;
     while(*dst_++) ;
     dst_--;
@@ -97,7 +97,7 @@ char* strcat(char* dst_,const char* src_)
 
 uint_32 strchrs(const char* str,uint_8 ch)
 {
-    ASSERT(str != NULL);
+    assert(str != NULL);
     uint_32 cnt = 0;
     while (*str)
     {

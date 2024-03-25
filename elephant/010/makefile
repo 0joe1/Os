@@ -45,7 +45,8 @@ OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/process.o  $(BUILD)/syscall-init.o $(BUILD)/she.o\
 		 $(BUILD)/stdio.o $(BUILD)/ide.o $(BUILD)/stdio-kernel.o \
 		 $(BUILD)/fs.o $(BUILD)/file.o $(BUILD)/inode.o $(BUILD)/dir.o \
-		 $(BUILD)/fork.o  $(BUILD)/syscall.o $(BUILD)/buildin_cmd.o
+		 $(BUILD)/fork.o  $(BUILD)/syscall.o $(BUILD)/buildin_cmd.o \
+		 $(BUILD)/assert.o $(BUILD)/exec.o
 
 ################# 汇编代码编译 ####################
 %.bin:%.asm
@@ -132,6 +133,9 @@ $(BUILD)/stdio.o: lib/stdio.c lib/stdio.h kernel/debug.h lib/string.h \
 				  lib/usr/syscall.h
 	$(CC) $(CFLAGS) $< -o $@
 
+$(BUILD)/assert.o: lib/usr/assert.c lib/usr/assert.h lib/stdio.h
+	$(CC) $(CFLAGS) $< -o $@
+
 $(BUILD)/ide.o: device/ide.c device/ide.h thread/sync.h lib/stdio.h \
 				kernel/global.h kernel/debug.h lib/kernel/io.h \
 				kernel/interrupt.h device/timer.h
@@ -160,6 +164,9 @@ $(BUILD)/she.o: she/shell.c she/shell.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD)/buildin_cmd.o: she/buildin_cmd.c she/buildin_cmd.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/exec.o: userprog/exec.c userprog/exec.h
 	$(CC) $(CFLAGS) $< -o $@
 
 ################ 链接所有目标文件 ###################

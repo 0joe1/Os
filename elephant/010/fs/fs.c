@@ -329,7 +329,9 @@ int_32 sys_open(const char* filename,uint_8 flag)
     else
     {
         printk("creating new file...\n");
-        const char* new_fname = strrchr(filename,'/')+1;
+        const char* new_fname = filename;
+        if (strrchr(filename,'/') != NULL)
+            new_fname = strrchr(filename,'/')+1;
         fd = file_create(record.p_dir,new_fname,flag);
     }
     return fd;

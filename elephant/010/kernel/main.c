@@ -35,6 +35,17 @@ int main(void){
     put_str("kernel starting...\n");
     init_all();
     intr_enable();
+/********************写入应用程序***********************/
+    uint_32 filesize = 300;
+    struct disk* sda = &channel[0].disk[0];
+    void* program = sys_malloc(filesize);
+    ASSERT(program != NULL);
+    ide_read(sda,program,30,DIV_ROUND_UP(filesize,PAGESIZE));
+    int_32 fd = open("try",O_CREAT|O_RDWT);
+    ASSERT(fd != -1);
+    sys_write(fd,program,filesize);
+/*******************************************************/
+
     cls_screen();
     print_prompt();
     while(1);

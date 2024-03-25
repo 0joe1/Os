@@ -120,6 +120,25 @@ void my_shell(void)
         else if (!strcmp(argv[0],"pwd")) {
             buildin_pwd(argc,argv);
         }
+        else
+        {
+            int_32 child = fork();
+            if (child == -1) {
+                PANIC("in shell: fork failed\n");
+            }
+            if (child==0){
+                while(1);
+            }
+            else
+            {
+                if (execv("try",argv) == -1) {
+                    printf("execv failed\n");
+                    return ;
+                }
+                while(1);
+            }
+
+        }
     }
     PANIC("my_shell: should not be here");
 }

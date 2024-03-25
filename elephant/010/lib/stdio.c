@@ -2,10 +2,11 @@
 #include "debug.h"
 #include "string.h"
 #include "syscall.h"
+#include "assert.h"
 
 static void itoa(uint_32 val,char** buf_ptr,uint_8 base)
 {
-    ASSERT(base<=16);
+    assert(base<=16);
     uint_32 m = val % base;
     uint_32 q = val / base;
     if (q) {

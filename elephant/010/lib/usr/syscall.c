@@ -131,4 +131,7 @@ int_32 closedir(struct dir* dir) {
     return _syscall1(SYS_CLOSEDIR,dir);
 }
 
+int_32 execv(const char* pathname,char** argv) {
+    return _syscall2(SYS_EXECV,pathname,argv);
+}
 
