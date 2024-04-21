@@ -7,4 +7,5 @@
     - -I../device
     - -I../thread
     - -I../fs
+    - -I../she
     - -m32

@@ -61,7 +61,7 @@ void start_process(void* filename)
     intr->cs = SELECTOR_U_CODE;
     intr->eip = func;
     intr->eflags = (EFLAG_MBS | EFALG_IOPL_0 | EFLAG_IF_1);
-    intr->esp = get_a_page(PF_USER,USR_STACK_VADDR);
+    intr->esp = (void*)((uint_32)get_a_page(PF_USER,USR_STACK_VADDR)+PAGESIZE);
     asm volatile("movl %0,%%esp;jmp int_exit;"::"g"((uint_32)intr):"memory");
 }
 

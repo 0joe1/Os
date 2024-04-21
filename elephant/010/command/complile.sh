@@ -19,7 +19,7 @@ DD_IN=$BIN
 DD_OUT="/home/username/Desktop/Os/elephant/010/boot.img"
 
 gcc $CFLAGS -I $LIB -I "../lib/kernel" -o $BIN".o" $BIN".c"
-ld -e main -m elf_i386  $BIN".o" $OBJS -o $BIN
+ld -m elf_i386 -T program.ld $BIN".o" $OBJS -o $BIN
 SEC_CNT=$(ls -l $BIN|awk '{printf("%d", ($5+511)/512)}')
 
 if [[ -f $BIN ]];then

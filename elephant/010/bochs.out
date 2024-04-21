@@ -1,6 +1,6 @@
 00000000000i[     ] Bochs x86 Emulator 2.6.2
 00000000000i[     ]   Built from SVN snapshot on May 26, 2013
-00000000000i[     ] Compiled on Jan  6 2024 at 10:51:43
+00000000000i[     ] Compiled on Sep 12 2023 at 22:22:36
 00000000000i[     ] System configuration
 00000000000i[     ]   processors: 1 (cores=1, HT threads=1)
 00000000000i[     ]   A20 line support: yes
@@ -30,7 +30,7 @@
 00000000000i[     ]   SB16 support: no
 00000000000i[     ]   USB support: no
 00000000000i[     ]   VGA extension support: vbe
-00000000000i[MEM0 ] allocated memory at 0x7f3753400010. after alignment, vector=0x7f3753401000
+00000000000i[MEM0 ] allocated memory at 0x7f396a600010. after alignment, vector=0x7f396a601000
 00000000000i[MEM0 ] 512.00MB
 00000000000i[MEM0 ] mem block size = 0x00100000, blocks=512
 00000000000i[MEM0 ] rom at 0xfffe0000/131072 ('/home/username/bochs-gdb/share/bochs/BIOS-bochs-latest')
@@ -40,7 +40,7 @@
 00000000000i[DEV  ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[     ] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS ] Using local time for initial clock
-00000000000i[CMOS ] Setting initial clock to: Sat Mar 23 20:40:16 2024 (time0=1711197616)
+00000000000i[CMOS ] Setting initial clock to: Sun Apr 21 16:43:39 2024 (time0=1713689019)
 00000000000i[     ] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA  ] channel 4 used by cascade
 00000000000i[     ] init_dev of 'pic' plugin device by virtual method
@@ -87,6 +87,7 @@
 00000000000i[PAR  ] parallel port 1 at 0x0378 irq 7
 00000000000i[     ] init_dev of 'serial' plugin device by virtual method
 00000000000i[SER  ] com1 at 0x03f8 irq 4
+00000000000i[     ] init_dev of 'iodebug' plugin device by virtual method
 00000000000i[     ] register state of 'pci' plugin device by virtual method
 00000000000i[     ] register state of 'pci2isa' plugin device by virtual method
 00000000000i[     ] register state of 'cmos' plugin device by virtual method
@@ -101,6 +102,7 @@
 00000000000i[     ] register state of 'extfpuirq' plugin device by virtual method
 00000000000i[     ] register state of 'parallel' plugin device by virtual method
 00000000000i[     ] register state of 'serial' plugin device by virtual method
+00000000000i[     ] register state of 'iodebug' plugin device by virtual method
 00000000000i[     ] register state of 'acpi' plugin device by virtual method
 00000000000i[     ] register state of 'ioapic' plugin device by virtual method
 00000000000i[     ] register state of 'keyboard' plugin device by virtual method
@@ -145,263 +147,78 @@
 00000000000i[     ] reset of 'extfpuirq' plugin device by virtual method
 00000000000i[     ] reset of 'parallel' plugin device by virtual method
 00000000000i[     ] reset of 'serial' plugin device by virtual method
+00000000000i[     ] reset of 'iodebug' plugin device by virtual method
 00000000000i[XGUI ] Mouse capture off
+00000000000i[     ] set SIGINT handler to bx_debug_ctrlc_handler
 00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[GDBST] addr 000000000000fff0 len 1
-00000000000i[MEM0 ] allocate_block: block=0x0 used 0x1 of 0x200
-00000000000i[XGUI ] Mouse capture off
-00000000000i[GDBST] addr 000000000000fff0 len 1
-00000000000i[XGUI ] Mouse capture off
-00000000000i[GDBST] addr 000000000000ffc0 len 40
-00000000000i[XGUI ] Mouse capture off
-00000000000i[GDBST] addr 000000000000fff0 len 8
-00000000000i[XGUI ] Mouse capture off
-00000000000i[GDBST] addr 000000000000fff0 len 7
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
-00000000000i[GDBST] addr 00000000c0001500 len 40
-00000000000i[XGUI ] Mouse capture off
-00000000000i[GDBST] addr 00000000c0001500 len 1
-00000000000i[XGUI ] Mouse capture off
-00000000000i[GDBST] setting breakpoint at c0001500
-00000000000i[XGUI ] Mouse capture off
-00000000000i[XGUI ] Mouse capture off
+00000000025i[MEM0 ] allocate_block: block=0x0 used 0x1 of 0x200
 00000004661i[BIOS ] $Revision: 11545 $ $Date: 2012-11-11 09:11:17 +0100 (So, 11. Nov 2012) $
-00000318067i[KBD  ] reset-disable command received
-00000320801i[BIOS ] Starting rombios32
-00000321235i[BIOS ] Shutdown flag 0
-00000321837i[BIOS ] ram_size=0x20000000
-00000322281i[BIOS ] ram_end=512MB
-00000362768i[BIOS ] Found 1 cpu(s)
-00000376955i[BIOS ] bios_table_addr: 0x000fa448 end=0x000fcc00
-00000704752i[PCI  ] i440FX PMC write to PAM register 59 (TLB Flush)
-00001032679i[P2I  ] PCI IRQ routing: PIRQA# set to 0x0b
-00001032698i[P2I  ] PCI IRQ routing: PIRQB# set to 0x09
-00001032717i[P2I  ] PCI IRQ routing: PIRQC# set to 0x0b
-00001032736i[P2I  ] PCI IRQ routing: PIRQD# set to 0x09
-00001032746i[P2I  ] write: ELCR2 = 0x0a
-00001033512i[BIOS ] PIIX3/PIIX4 init: elcr=00 0a
-00001041185i[BIOS ] PCI: bus=0 devfn=0x00: vendor_id=0x8086 device_id=0x1237 class=0x0600
-00001043455i[BIOS ] PCI: bus=0 devfn=0x08: vendor_id=0x8086 device_id=0x7000 class=0x0601
-00001045564i[BIOS ] PCI: bus=0 devfn=0x09: vendor_id=0x8086 device_id=0x7010 class=0x0101
-00001045793i[PIDE ] new BM-DMA address: 0xc000
-00001046410i[BIOS ] region 4: 0x0000c000
-00001048435i[BIOS ] PCI: bus=0 devfn=0x0b: vendor_id=0x8086 device_id=0x7113 class=0x0680
-00001048668i[ACPI ] new irq line = 11
-00001048680i[ACPI ] new irq line = 9
-00001048709i[ACPI ] new PM base address: 0xb000
-00001048723i[ACPI ] new SM base address: 0xb100
-00001048751i[PCI  ] setting SMRAM control register to 0x4a
-00001212842i[CPU0 ] Enter to System Management Mode
-00001212853i[CPU0 ] RSM: Resuming from System Management Mode
-00001376871i[PCI  ] setting SMRAM control register to 0x0a
-00001391764i[BIOS ] MP table addr=0x000fa520 MPC table addr=0x000fa450 size=0xc8
-00001393520i[BIOS ] SMBIOS table addr=0x000fa530
-00001393578i[MEM0 ] allocate_block: block=0x1ff used 0x2 of 0x200
-00001395722i[BIOS ] ACPI tables: RSDP addr=0x000fa650 ACPI DATA addr=0x1fff0000 size=0xf72
-00001398942i[BIOS ] Firmware waking vector 0x1fff00cc
-00001400740i[PCI  ] i440FX PMC write to PAM register 59 (TLB Flush)
-00001401468i[BIOS ] bios_table_cur_addr: 0x000fa674
-00001529085i[VBIOS] VGABios $Id: vgabios.c,v 1.75 2011/10/15 14:07:21 vruppert Exp $
-00001529156i[BXVGA] VBE known Display Interface b0c0
-00001529188i[BXVGA] VBE known Display Interface b0c5
-00001532113i[VBIOS] VBE Bios $Id: vbe.c,v 1.64 2011/07/19 18:25:05 vruppert Exp $
-00001600000i[XGUI ] charmap update. Font Height is 16
-00001871623i[BIOS ] ata0-0: PCHS=58/16/63 translation=none LCHS=58/16/63
-00001925656i[BIOS ] ata0-1: PCHS=162/16/63 translation=none LCHS=162/16/63
-00014089413i[BIOS ] Booting from 0000:7c00
-00014302456i[MEM0 ] allocate_block: block=0x1 used 0x3 of 0x200
-00014373165i[GDBST] found breakpoint at c0001500
-00014373165i[GDBST] stopped with ac1
-00014373165i[XGUI ] Mouse capture off
-00014373165i[XGUI ] Mouse capture off
-00014373165i[GDBST] reg 8 set to 00000000c0001500
-00014373165i[XGUI ] Mouse capture off
-00014373165i[GDBST] reg 41 set to 00000000ffffffff
-00014373165i[XGUI ] Mouse capture off
-00014373165i[XGUI ] Mouse capture off
-00014373165i[GDBST] Removing breakpoint at c0001500
-00014373165i[XGUI ] Mouse capture off
-00014373165i[GDBST] addr 00000000c0001500 len 1
-00014373165i[XGUI ] Mouse capture off
-00014373165i[XGUI ] Mouse capture off
-00014373165i[GDBST] stepping
-00014373166i[GDBST] stopped with ac2
-00014373166i[XGUI ] Mouse capture off
-00014373166i[XGUI ] Mouse capture off
-00014373166i[GDBST] setting breakpoint at c0001500
-00014373166i[XGUI ] Mouse capture off
-00014373166i[XGUI ] Mouse capture off
-00014373166i[GDBST] stepping
-00014373167i[GDBST] stopped with ac2
-00014373167i[XGUI ] Mouse capture off
-00014373167i[XGUI ] Mouse capture off
-00014373167i[GDBST] stepping
-00014373168i[GDBST] stopped with ac2
-00014373168i[XGUI ] Mouse capture off
-00014373168i[XGUI ] Mouse capture off
-00014373168i[GDBST] stepping
-00014373169i[GDBST] stopped with ac2
-00014373169i[XGUI ] Mouse capture off
-00014373169i[XGUI ] Mouse capture off
-00014373169i[GDBST] stepping
-00014373170i[GDBST] stopped with ac2
-00014373170i[XGUI ] Mouse capture off
-00014373170i[XGUI ] Mouse capture off
-00014373170i[GDBST] stepping
-00014373171i[GDBST] stopped with ac2
-00014373171i[XGUI ] Mouse capture off
-00014373171i[XGUI ] Mouse capture off
-00014373171i[GDBST] stepping
-00014373172i[GDBST] stopped with ac2
-00014373172i[XGUI ] Mouse capture off
-00014373172i[XGUI ] Mouse capture off
-00014373172i[GDBST] stepping
-00014373173i[GDBST] stopped with ac2
-00014373173i[XGUI ] Mouse capture off
-00014373173i[XGUI ] Mouse capture off
-00014373173i[GDBST] stepping
-00014373174i[GDBST] stopped with ac2
-00014373174i[XGUI ] Mouse capture off
-00014373174i[XGUI ] Mouse capture off
-00014373174i[GDBST] addr 00000000c000d004 len 1
-00014373174i[XGUI ] Mouse capture off
-00014373174i[GDBST] addr 00000000c000d000 len 40
-00014373174i[XGUI ] Mouse capture off
-00014373174i[GDBST] addr 00000000c009efc0 len 40
-00014373174i[XGUI ] Mouse capture off
-00014373174i[GDBST] addr 00000000c0001500 len 40
-00014373174i[XGUI ] Mouse capture off
-00014373174i[XGUI ] Mouse capture off
-00014373174i[GDBST] Removing breakpoint at c0001500
-00014373174i[XGUI ] Mouse capture off
-00014373174i[GDBST] addr 00000000c000d004 len 1
-00014373174i[XGUI ] Mouse capture off
-00014373174i[GDBST] setting breakpoint at c0001500
-00014373174i[XGUI ] Mouse capture off
-00014373174i[GDBST] stepping
-00014373175i[GDBST] stopped with ac2
-00014373175i[XGUI ] Mouse capture off
-00014373175i[XGUI ] Mouse capture off
-00014373175i[GDBST] stepping
-00014373176i[GDBST] stopped with ac2
-00014373176i[XGUI ] Mouse capture off
-00014373176i[XGUI ] Mouse capture off
-00014373176i[GDBST] addr 00000000c0001517 len 1
-00014373176i[XGUI ] Mouse capture off
-00014373176i[GDBST] addr 00000000c0001500 len 40
-00014373176i[XGUI ] Mouse capture off
-00014373176i[GDBST] addr 00000000c009efc0 len 40
-00014373176i[XGUI ] Mouse capture off
-00014373176i[GDBST] addr 000000008ec031fa len 8
-00014373176i[XGUI ] Mouse capture off
-00014373176i[GDBST] addr 000000008ec031fa len 7
-00014373176i[XGUI ] Mouse capture off
-00014373176i[GDBST] stepping
-00014373177i[GDBST] stopped with ac2
-00014373177i[XGUI ] Mouse capture off
-00014373177i[XGUI ] Mouse capture off
-00014373177i[GDBST] addr 00000000c000151d len 1
-00014373177i[XGUI ] Mouse capture off
-00014373177i[GDBST] addr 00000000c0001500 len 40
-00014373177i[XGUI ] Mouse capture off
-00014373177i[XGUI ] Mouse capture off
-00014373177i[GDBST] Removing breakpoint at c0001500
-00014373177i[XGUI ] Mouse capture off
-00014373177i[GDBST] addr 00000000c000151d len 1
-00014373177i[XGUI ] Mouse capture off
-00014373177i[GDBST] setting breakpoint at c0001500
-00014373177i[XGUI ] Mouse capture off
-00014373177i[GDBST] stepping
-00014373178i[GDBST] stopped with ac2
-00014373178i[XGUI ] Mouse capture off
-00014373178i[XGUI ] Mouse capture off
-00014373178i[GDBST] stepping
-00014373179i[GDBST] stopped with ac2
-00014373179i[XGUI ] Mouse capture off
-00014373179i[XGUI ] Mouse capture off
-00014373179i[GDBST] stepping
-00014373180i[GDBST] stopped with ac2
-00014373180i[XGUI ] Mouse capture off
-00014373180i[XGUI ] Mouse capture off
-00014373180i[GDBST] stepping
-00014373181i[GDBST] stopped with ac2
-00014373181i[XGUI ] Mouse capture off
-00014373181i[XGUI ] Mouse capture off
-00014373181i[GDBST] addr 00000000c0001ce1 len 1
-00014373181i[XGUI ] Mouse capture off
-00014373181i[GDBST] addr 00000000c0001cc0 len 40
-00014373181i[XGUI ] Mouse capture off
-00014373181i[GDBST] addr 00000000c009efc0 len 40
-00014373181i[XGUI ] Mouse capture off
-00014373181i[GDBST] addr 00000000c0001500 len 40
-00014373181i[XGUI ] Mouse capture off
-00014373181i[GDBST] addr 00000000c000152c len 1
-00014373181i[XGUI ] Mouse capture off
-00014373181i[GDBST] setting breakpoint at c000152c
-00014373181i[XGUI ] Mouse capture off
-00014374161i[GDBST] found breakpoint at c000152c
-00014374161i[GDBST] stopped with ac1
-00014374161i[XGUI ] Mouse capture off
-00014374161i[XGUI ] Mouse capture off
-00014374161i[GDBST] reg 8 set to 00000000c000152c
-00014374161i[XGUI ] Mouse capture off
-00014374161i[GDBST] reg 41 set to 00000000ffffffff
-00014374161i[XGUI ] Mouse capture off
-00014374161i[GDBST] addr 00000000c000152c len 1
-00014374161i[XGUI ] Mouse capture off
-00014374161i[GDBST] addr 00000000c0001500 len 40
-00014374161i[XGUI ] Mouse capture off
-00014374161i[GDBST] Removing breakpoint at c000152c
-00014374161i[XGUI ] Mouse capture off
-00014374161i[GDBST] stepping
-00014374162i[GDBST] stopped with ac2
-00014374162i[XGUI ] Mouse capture off
-00014374162i[XGUI ] Mouse capture off
-00014374162i[GDBST] addr 00000000c000152f len 1
-00014374162i[XGUI ] Mouse capture off
-00014374162i[GDBST] addr 00000000c0001500 len 40
-00014374162i[XGUI ] Mouse capture off
-00014374162i[XGUI ] Mouse capture off
-00014374162i[GDBST] Removing breakpoint at c0001500
-00014374162i[XGUI ] Mouse capture off
-00014374162i[GDBST] addr 00000000c000152f len 1
-00014374162i[XGUI ] Mouse capture off
-00014374162i[XGUI ] Mouse capture off
-00014374162p[GDBST] >>PANIC<< Debugger asked us to quit
-00014374162i[CPU0 ] CPU is in protected mode (active)
-00014374162i[CPU0 ] CS.mode = 32 bit
-00014374162i[CPU0 ] SS.mode = 32 bit
-00014374162i[CPU0 ] EFER   = 0x00000000
-00014374162i[CPU0 ] | EAX=c000d180  EBX=c000f000  ECX=c009f004  EDX=00000020
-00014374162i[CPU0 ] | ESP=c009efe0  EBP=c009eff8  ESI=00070000  EDI=00000000
-00014374162i[CPU0 ] | IOPL=0 id vip vif ac vm rf nt of df if tf SF zf af pf cf
-00014374162i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
-00014374162i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
-00014374162i[CPU0 ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-00014374162i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-00014374162i[CPU0 ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-00014374162i[CPU0 ] |  FS:0000( 0005| 0|  0) 00000000 0000ffff 0 0
-00014374162i[CPU0 ] |  GS:0018( 0003| 0|  0) c00b8000 00007fff 1 1
-00014374162i[CPU0 ] | EIP=c000152f (c000152f)
-00014374162i[CPU0 ] | CR0=0xe0000011 CR2=0x00000000
-00014374162i[CPU0 ] | CR3=0x00100000 CR4=0x00000000
-00014374162i[CPU0 ] 0xc000152f>> call .+392 (0xc00016bc) : E888010000
-00014374162i[CMOS ] Last time is 1711197619 (Sat Mar 23 20:40:19 2024)
-00014374162i[XGUI ] Exit
-00014374162i[     ] restoring default signal behavior
-00014374162i[CTRL ] quit_sim called with exit code 1
+00000320050i[KBD  ] reset-disable command received
+00000322822i[BIOS ] Starting rombios32
+00000323256i[BIOS ] Shutdown flag 0
+00000323858i[BIOS ] ram_size=0x20000000
+00000324302i[BIOS ] ram_end=512MB
+00000364807i[BIOS ] Found 1 cpu(s)
+00000378994i[BIOS ] bios_table_addr: 0x000fa448 end=0x000fcc00
+00000706791i[PCI  ] i440FX PMC write to PAM register 59 (TLB Flush)
+00001034718i[P2I  ] PCI IRQ routing: PIRQA# set to 0x0b
+00001034737i[P2I  ] PCI IRQ routing: PIRQB# set to 0x09
+00001034756i[P2I  ] PCI IRQ routing: PIRQC# set to 0x0b
+00001034775i[P2I  ] PCI IRQ routing: PIRQD# set to 0x09
+00001034785i[P2I  ] write: ELCR2 = 0x0a
+00001035551i[BIOS ] PIIX3/PIIX4 init: elcr=00 0a
+00001043224i[BIOS ] PCI: bus=0 devfn=0x00: vendor_id=0x8086 device_id=0x1237 class=0x0600
+00001045494i[BIOS ] PCI: bus=0 devfn=0x08: vendor_id=0x8086 device_id=0x7000 class=0x0601
+00001047603i[BIOS ] PCI: bus=0 devfn=0x09: vendor_id=0x8086 device_id=0x7010 class=0x0101
+00001047832i[PIDE ] new BM-DMA address: 0xc000
+00001048449i[BIOS ] region 4: 0x0000c000
+00001050474i[BIOS ] PCI: bus=0 devfn=0x0b: vendor_id=0x8086 device_id=0x7113 class=0x0680
+00001050707i[ACPI ] new irq line = 11
+00001050719i[ACPI ] new irq line = 9
+00001050748i[ACPI ] new PM base address: 0xb000
+00001050762i[ACPI ] new SM base address: 0xb100
+00001050790i[PCI  ] setting SMRAM control register to 0x4a
+00001214881i[CPU0 ] Enter to System Management Mode
+00001214892i[CPU0 ] RSM: Resuming from System Management Mode
+00001378910i[PCI  ] setting SMRAM control register to 0x0a
+00001393803i[BIOS ] MP table addr=0x000fa520 MPC table addr=0x000fa450 size=0xc8
+00001395559i[BIOS ] SMBIOS table addr=0x000fa530
+00001395617i[MEM0 ] allocate_block: block=0x1ff used 0x2 of 0x200
+00001397761i[BIOS ] ACPI tables: RSDP addr=0x000fa650 ACPI DATA addr=0x1fff0000 size=0xf72
+00001400981i[BIOS ] Firmware waking vector 0x1fff00cc
+00001402779i[PCI  ] i440FX PMC write to PAM register 59 (TLB Flush)
+00001403507i[BIOS ] bios_table_cur_addr: 0x000fa674
+00001531124i[VBIOS] VGABios $Id: vgabios.c,v 1.75 2011/10/15 14:07:21 vruppert Exp $
+00001531195i[BXVGA] VBE known Display Interface b0c0
+00001531227i[BXVGA] VBE known Display Interface b0c5
+00001534152i[VBIOS] VBE Bios $Id: vbe.c,v 1.64 2011/07/19 18:25:05 vruppert Exp $
+00001600003i[XGUI ] charmap update. Font Height is 16
+00001873662i[BIOS ] ata0-0: PCHS=58/16/63 translation=none LCHS=58/16/63
+00001927695i[BIOS ] ata0-1: PCHS=162/16/63 translation=none LCHS=162/16/63
+00014089422i[BIOS ] Booting from 0000:7c00
+00014302465i[MEM0 ] allocate_block: block=0x1 used 0x3 of 0x200
+00014652771i[MEM0 ] allocate_block: block=0x2 used 0x4 of 0x200
+00016535440i[MEM0 ] allocate_block: block=0x101 used 0x5 of 0x200
+00137600001i[     ] Ctrl-C detected in signal handler.
+00137600001i[XGUI ] Mouse capture off
+00137600001i[     ] dbg: Quit
+00137600001i[CPU0 ] CPU is in protected mode (active)
+00137600001i[CPU0 ] CS.mode = 32 bit
+00137600001i[CPU0 ] SS.mode = 32 bit
+00137600001i[CPU0 ] EFER   = 0x00000000
+00137600001i[CPU0 ] | EAX=c000d2bc  EBX=c000f000  ECX=bffffb1c  EDX=000003d5
+00137600001i[CPU0 ] | ESP=c011af80  EBP=c011afa8  ESI=00000000  EDI=00000000
+00137600001i[CPU0 ] | IOPL=0 id vip vif ac vm rf nt of df if tf SF zf af pf cf
+00137600001i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
+00137600001i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
+00137600001i[CPU0 ] |  DS:0033( 0006| 0|  3) 00000000 ffffffff 1 1
+00137600001i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+00137600001i[CPU0 ] |  ES:0033( 0006| 0|  3) 00000000 ffffffff 1 1
+00137600001i[CPU0 ] |  FS:0000( 0000| 0|  0) 00000000 00000000 0 0
+00137600001i[CPU0 ] |  GS:0018( 0003| 0|  0) c00b8000 00007fff 1 1
+00137600001i[CPU0 ] | EIP=c0001847 (c0001847)
+00137600001i[CPU0 ] | CR0=0xe0000011 CR2=0x00000000
+00137600001i[CPU0 ] | CR3=0x00234000 CR4=0x00000000
+00137600001i[CMOS ] Last time is 1713689053 (Sun Apr 21 16:44:13 2024)
+00137600001i[XGUI ] Exit
+00137600001i[CTRL ] quit_sim called with exit code 0

@@ -5,7 +5,7 @@
 
 #define DEFALT_PRI 31
 
-#define USR_STACK_VADDR (0xc0000000-1000)
+#define USR_STACK_VADDR (0xc0000000-0x1000)
 #define USR_VADDR_START 0x8048000
 
 void start_process(void* arg);

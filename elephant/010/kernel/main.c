@@ -36,11 +36,11 @@ int main(void){
     init_all();
     intr_enable();
 /********************写入应用程序***********************/
-    uint_32 filesize = 300;
+    uint_32 filesize = 4300;
     struct disk* sda = &channel[0].disk[0];
     void* program = sys_malloc(filesize);
     ASSERT(program != NULL);
-    ide_read(sda,program,30,DIV_ROUND_UP(filesize,PAGESIZE));
+    ide_read(sda,program,300,DIV_ROUND_UP(filesize,PAGESIZE));
     int_32 fd = open("try",O_CREAT|O_RDWT);
     ASSERT(fd != -1);
     sys_write(fd,program,filesize);

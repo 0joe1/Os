@@ -399,7 +399,7 @@ int_32 sys_read(uint_32 fd,void* buf,uint_32 count)
             return -1;
         }
         struct file* f = &file_table[_fd];
-        if (!(f->flag&O_RDONLY || f->flag&O_RDWT)) {
+        if (!(f->flag==O_RDONLY || f->flag&O_RDWT)) {
             printk("can't read without read flag\n");
             return -1;
         }

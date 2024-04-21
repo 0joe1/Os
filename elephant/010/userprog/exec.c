@@ -5,6 +5,7 @@
 #include "stdio-kernel.h"
 #include "thread.h"
 #include "global.h"
+#include "buildin_cmd.h"
 
 static Bool load_phdr(uint_32 fd,Elf_Phdr* phdr)
 {
@@ -34,7 +35,7 @@ static Bool load_phdr(uint_32 fd,Elf_Phdr* phdr)
     }
 
     sys_lseek(fd,phdr->p_offset,SEEK_SET);
-    sys_write(fd,(void*)phdr->p_vaddr,phdr->p_filesz);
+    sys_read(fd,(void*)phdr->p_vaddr,phdr->p_filesz);
     return true;
 }
 
@@ -57,7 +58,7 @@ static int_32 load(const char* pathname)
         goto done;
     }
 
-    if (!memcmp(ehdr.e_ident,"\177ELF",4) || \
+    if (memcmp(ehdr.e_ident,"\177ELF",4) || \
         ehdr.e_ident[4] != 1 || \
         ehdr.e_ident[5] != 1 || \
         ehdr.e_ident[6] != 1)
@@ -69,10 +70,10 @@ static int_32 load(const char* pathname)
 
     Elf_Phdr phdr;
     uint_32 phoff = ehdr.e_phoff;
-    sys_lseek(fd,ehdr.e_phoff,SEEK_SET);
     for (uint_32 ph = 0 ; ph < ehdr.e_phnum ; ph++)
     {
         memset(&phdr,0,sizeof(phdr));
+        sys_lseek(fd,phoff,SEEK_SET);
         if (sys_read(fd,&phdr,sizeof(phdr)) == -1) {
             ret = -1;
             goto done;
@@ -80,6 +81,7 @@ static int_32 load(const char* pathname)
         if (phdr.p_type == PT_LOAD) {
             load_phdr(fd,&phdr);   //只加载可加载程序段
         }
+        phoff += ehdr.e_phentsize;
     }
 
     ret = ehdr.e_entry;
@@ -100,12 +102,14 @@ int_32 sys_execv(const char* pathname,char** argv)
         return -1;
     }
 
-    const char* fname = strrchr(pathname,'/')+1;
+    char buf[MAX_PATH_LEN];
+    make_abs_path((char*)pathname,buf);
+    const char* fname = strrchr(buf,'/')+1;
     struct task_struct* cur = running_thread();
     strcpy(cur->name,fname);
 
     struct intr_stack* intr = (struct intr_stack*) \
-                              (uint_32)cur+PAGESIZE-sizeof(struct intr_stack);
+                              ((uint_32)cur+PAGESIZE-sizeof(struct intr_stack));
     /* program control */
     intr->eip = (void*)entry_point;
     intr->esp = (void*)((uint_32)cur + PAGESIZE);
