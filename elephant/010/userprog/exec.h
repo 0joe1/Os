@@ -14,7 +14,7 @@ enum seg_type {
     PT_NULL,
     PT_LOAD,
     PT_DYNAMIC,
- PT_INTERP,
+    PT_INTERP,
     PT_NOTE,
     PT_SHLIB,
     PT_PHDR,

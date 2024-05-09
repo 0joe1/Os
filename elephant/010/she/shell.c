@@ -122,18 +122,28 @@ void my_shell(void)
         }
         else
         {
-            int_32 child = fork();
-            if (child == -1) {
+            int_32 pid = fork();
+            if (pid == -1) {
                 PANIC("in shell: fork failed\n");
             }
-            if (child==0){
+            if (pid){
                 while(1);
             }
             else
             {
-                if (execv("try",argv) == -1) {
-                    printf("execv failed\n");
-                    return ;
+                char final_path[MAX_PATH_LEN];
+                memset(final_path,0,MAX_PATH_LEN);
+                make_abs_path(argv[0],final_path);
+                argv[0] = final_path;
+
+                struct stat filestat;
+                if (stat(argv[0],&filestat) == -1) {
+                    printf("my_shell can't access %s\n",argv[0]);
+                } else {
+                    if (execv(argv[0],argv) == -1) {
+                        printf("execv failed\n");
+                        return ;
+                    }
                 }
                 while(1);
             }

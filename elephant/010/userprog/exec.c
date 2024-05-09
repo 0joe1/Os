@@ -11,7 +11,7 @@ static Bool load_phdr(uint_32 fd,Elf_Phdr* phdr)
 {
     uint_32 page_cnt;
     int_32 remain_size;
-    remain_size = phdr->p_filesz - (PAGESIZE - phdr->p_vaddr&0x00000fff);
+    remain_size = phdr->p_filesz - (PAGESIZE - (phdr->p_vaddr&0x00000fff));
     if (remain_size > 0) {
         page_cnt = DIV_ROUND_UP(remain_size,PAGESIZE) + 1;
     } else {
@@ -112,9 +112,9 @@ int_32 sys_execv(const char* pathname,char** argv)
                               ((uint_32)cur+PAGESIZE-sizeof(struct intr_stack));
     /* program control */
     intr->eip = (void*)entry_point;
-    intr->esp = (void*)((uint_32)cur + PAGESIZE);
+    intr->esp = (void*)(0xc0000000);
     /* argc and argv */
-    intr->ebx = (uint_32)*argv;
+    intr->ebx = (uint_32)argv;
     intr->ecx = argc;
 
     asm volatile("movl %0,%%esp;jmp int_exit;"::"g"((uint_32)intr):"memory");

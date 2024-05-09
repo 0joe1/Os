@@ -195,6 +195,8 @@ void pad_print(char* buf,uint_32 bufsize,void* ptr,char format)
     switch(format) {
         case 's':
             sprintf(buf,"%s",(char*)ptr);
+            if (strlen(buf) != bufsize-1 && buf[strlen(buf)-1] != '\n')
+                buf[strlen(buf)] = ' ';
             break;
         case 'd':
             sprintf(buf,"%d",*(uint_32*)ptr);
@@ -253,7 +255,7 @@ Bool elm2thread_info(struct list_elm* elm,int arg)
 void sys_ps(void)
 {
     const char* title = "PID             PPID             TICKS             "\
-                        "STAT            COMMANDn\n";
+                        "STAT            COMMAND\n";
     sys_write(stdout,title,strlen(title)+1);
     list_traversal(&all_thread_list,elm2thread_info,NULL);
 }

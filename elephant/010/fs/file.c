@@ -177,7 +177,7 @@ int_32 file_write(struct file* file,const void* buf,uint_32 count)
     uint_32 add_blks = fu_blksize - cur_blksize;
 
 
-    uint_32 cur_blkidx = cur_blksize - 1;
+    uint_32 cur_blkidx = inode->i_size / BLOCKSIZE;
     int_32 lba;
     if (cur_blksize == 0) {
         lba = block_bitmap_alloc(cur_part);
@@ -224,6 +224,8 @@ int_32 file_write(struct file* file,const void* buf,uint_32 count)
                 printk("file_write: block bitmap alloc failed\n");
                 return -1;
             }
+            uint_32 bit_idx = lba - cur_part->sb->data_start_lba;
+            sync_bitmap(cur_part,bit_idx,BLOCK_BITMAP);
             all_blocks[cur_blkidx++] = lba;
         }
         ide_write(cur_part->hd,all_blocks+12,inode->block[12],1);
@@ -237,6 +239,8 @@ int_32 file_write(struct file* file,const void* buf,uint_32 count)
                 printk("file_write: block bitmap alloc failed\n");
                 return -1;
             }
+            uint_32 bit_idx = lba - cur_part->sb->data_start_lba;
+            sync_bitmap(cur_part,bit_idx,BLOCK_BITMAP);
             all_blocks[cur_blkidx++] = lba;
         }
         ide_write(cur_part->hd,all_blocks+12,inode->block[12],1);
@@ -260,7 +264,7 @@ int_32 file_write(struct file* file,const void* buf,uint_32 count)
         memcpy(io_buf+sec_start_byte,(void*)src,size_tow);
 
         ide_write(cur_part->hd,io_buf,all_blocks[blk_idx++],1);
-        printk("file write at lba 0x%x\n",all_blocks[blk_idx-1]);
+        //printk("file write at lba 0x%x\n",all_blocks[blk_idx-1]);
         src += size_tow;
         inode->i_size += size_tow;
         size_left -= size_tow;
@@ -300,8 +304,7 @@ int_32 file_read(struct file* file,void* buf,uint_32 count)
     struct inode* inode = file->inode;
     ASSERT(inode != NULL);
 
-    uint_32 start_size = DIV_ROUND_UP(file->fd_pos,BLOCKSIZE);
-    uint_32 start_idx = start_size > 0 ? start_size -1 : 0;
+    uint_32 start_idx = file->fd_pos / BLOCKSIZE;
     uint_32 end_idx   = DIV_ROUND_UP(file->fd_pos+count,BLOCKSIZE) - 1;
     uint_32 blks_to_read = end_idx - start_idx + 1;
 
@@ -337,7 +340,7 @@ int_32 file_read(struct file* file,void* buf,uint_32 count)
         sec_remain_bytes = BLOCKSIZE - sec_start_byte;
         size_rd  = size_left < sec_remain_bytes ? size_left : sec_remain_bytes;
         memset(io_buf,0,512);
-        ide_read(cur_part->hd,io_buf,all_blocks[cur_blkidx],1);
+        ide_read(cur_part->hd,io_buf,all_blocks[cur_blkidx++],1);
         memcpy(dst,io_buf+sec_start_byte,size_rd);
 
         file->fd_pos += size_rd;

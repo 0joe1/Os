@@ -16,6 +16,7 @@
 #include "file.h"
 #include "fork.h"
 #include "shell.h"
+#include "stdio-kernel.h"
 
 //void sss(void)
 //{
@@ -34,17 +35,17 @@ int prog_a_pid,prog_b_pid;
 int main(void){
     put_str("kernel starting...\n");
     init_all();
-    intr_enable();
 /********************写入应用程序***********************/
-    uint_32 filesize = 4300;
+    uint_32 filesize = 12000;
     struct disk* sda = &channel[0].disk[0];
-    void* program = sys_malloc(filesize);
+    void* program = sys_malloc(14000);
     ASSERT(program != NULL);
-    ide_read(sda,program,300,DIV_ROUND_UP(filesize,PAGESIZE));
-    int_32 fd = open("try",O_CREAT|O_RDWT);
+    ide_read(sda,program,300,DIV_ROUND_UP(filesize,BLOCKSIZE));
+    int_32 fd = open("prog_no_arg",O_CREAT|O_RDWT);
     ASSERT(fd != -1);
     sys_write(fd,program,filesize);
 /*******************************************************/
+    intr_enable();
 
     cls_screen();
     print_prompt();
@@ -79,6 +80,7 @@ void init(void)
         my_shell();
     } else {
         printf("I am parent %d , my child is %d\n",getpid(),retpid);
+        int a = *(char*)(0xc0000010);
         while(1);
     }
     PANIC("should not be here");
