@@ -81,6 +81,64 @@ static int_32 cmd_parse(char* cmd_str,char** argv,char tocken)
     return argc;
 }
 
+static void cmd_execute(uint_32 argc,char *argv[])
+{
+    if (!strcmp(argv[0],"cd")) {
+        buildin_cd(argc,argv);
+    } 
+    else if (!strcmp(argv[0],"ls")) {
+        buildin_ls(argc,argv);
+    }
+    else if (!strcmp(argv[0],"rm")) {
+        buildin_rm(argc,argv);
+    }
+    else if (!strcmp(argv[0],"rmdir")) {
+        buildin_rmdir(argc,argv);
+    }
+    else if (!strcmp(argv[0],"mkdir")) {
+        buildin_mkdir(argc,argv);
+    }
+    else if (!strcmp(argv[0],"clear")) {
+        buildin_clear(argc,argv);
+    }
+    else if (!strcmp(argv[0],"ps")) {
+        buildin_ps(argc,argv);
+    }
+    else if (!strcmp(argv[0],"pwd")) {
+        buildin_pwd(argc,argv);
+    }
+    else if (!strcmp(argv[0],"help")) {
+        help();
+    }
+    else
+    {
+        int_32 pid = fork();
+        if (pid == -1) {
+            PANIC("in shell: fork failed\n");
+        }
+        if (pid){
+            int_32 status;
+            pid_t child_pid = wait(&status);
+            //printf("child pid %d,it's status: %d\n",child_pid,status);
+        }
+        else
+        {
+            char final_path[MAX_PATH_LEN];
+            memset(final_path,0,MAX_PATH_LEN);
+            make_abs_path(argv[0],final_path);
+            argv[0] = final_path;
+
+            struct stat filestat;
+            if (stat(argv[0],&filestat) == -1) {
+                printf("my_shell can't access %s\n",argv[0]);
+            } else {
+                execv(argv[0],argv);
+            }
+            while(1);
+        }
+    }
+}
+
 void my_shell(void)
 {
     cwd_cache[0] = '/';
@@ -92,62 +150,43 @@ void my_shell(void)
             continue;
         }
         char new_path[MAX_PATH_LEN];
-        uint_32 argc = cmd_parse(cmdline,argv,' ');
-        if (argc == -1) {
-            continue;
-        }
-        if (!strcmp(argv[0],"cd")) {
-            buildin_cd(argc,argv);
-        } 
-        else if (!strcmp(argv[0],"ls")) {
-            buildin_ls(argc,argv);
-        }
-        else if (!strcmp(argv[0],"rm")) {
-            buildin_rm(argc,argv);
-        }
-        else if (!strcmp(argv[0],"rmdir")) {
-            buildin_rmdir(argc,argv);
-        }
-        else if (!strcmp(argv[0],"mkdir")) {
-            buildin_mkdir(argc,argv);
-        }
-        else if (!strcmp(argv[0],"clear")) {
-            buildin_clear(argc,argv);
-        }
-        else if (!strcmp(argv[0],"ps")) {
-            buildin_ps(argc,argv);
-        }
-        else if (!strcmp(argv[0],"pwd")) {
-            buildin_pwd(argc,argv);
+
+        int_32 p[2];
+        pipe(p);
+        char* psbl = strchr(cmdline,'|');
+        if (psbl)
+        {
+            *psbl=0;
+            int argc = cmd_parse(cmdline,argv,' ');
+            fd_redirect(1,p[1]);
+            cmd_execute(argc,argv);
+            memset(argv,0,sizeof(argv));
+
+            char* each_cmd = psbl+1;
+            fd_redirect(0,p[0]);
+            while ((psbl = strchr(each_cmd,'|')) != NULL)
+            {
+                *psbl = 0;
+                int argc = cmd_parse(each_cmd,argv,' ');
+                cmd_execute(argc,argv);
+                memset(argv,0,sizeof(argv));
+                each_cmd = psbl+1;
+            }
+            fd_redirect(1,1);
+
+            argc = cmd_parse(each_cmd,argv,' ');
+            cmd_execute(argc,argv);
+            memset(argv,0,sizeof(argv));
+            fd_redirect(0,0);
         }
         else
         {
-            int_32 pid = fork();
-            if (pid == -1) {
-                PANIC("in shell: fork failed\n");
+            int argc = cmd_parse(cmdline,argv,' ');
+            if (argc == -1) {
+                printf("num of arguments exceeded\n");
+                continue;
             }
-            if (pid){
-                while(1);
-            }
-            else
-            {
-                char final_path[MAX_PATH_LEN];
-                memset(final_path,0,MAX_PATH_LEN);
-                make_abs_path(argv[0],final_path);
-                argv[0] = final_path;
-
-                struct stat filestat;
-                if (stat(argv[0],&filestat) == -1) {
-                    printf("my_shell can't access %s\n",argv[0]);
-                } else {
-                    if (execv(argv[0],argv) == -1) {
-                        printf("execv failed\n");
-                        return ;
-                    }
-                }
-                while(1);
-            }
-
+            cmd_execute(argc,argv);
         }
     }
     PANIC("my_shell: should not be here");

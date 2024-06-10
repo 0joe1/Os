@@ -32,7 +32,7 @@ image: ${OBJS_BIN}
 #kernel.bin文件写入boot.img磁盘映像文件的第9个扇区。
 	dd if=$(BUILD)/kernel.bin of=boot.img bs=512 count=200 seek=9 conv=notrunc
 #创建 hd80M.img
-	cp hd80M.bak3 hd80M.img
+	cp hd80M.bak6 hd80M.img
 #@-表示忽略删除过程中出现的错误。
 	@-rm -rf *.bin	
   
@@ -46,7 +46,8 @@ OBJS_O = $(BUILD)/main.o $(BUILD)/init.o $(BUILD)/interrupt.o\
 		 $(BUILD)/stdio.o $(BUILD)/ide.o $(BUILD)/stdio-kernel.o \
 		 $(BUILD)/fs.o $(BUILD)/file.o $(BUILD)/inode.o $(BUILD)/dir.o \
 		 $(BUILD)/fork.o  $(BUILD)/syscall.o $(BUILD)/buildin_cmd.o \
-		 $(BUILD)/assert.o $(BUILD)/exec.o
+		 $(BUILD)/assert.o $(BUILD)/exec.o $(BUILD)/wait_exit.o \
+		 $(BUILD)/pipe.o
 
 ################# 汇编代码编译 ####################
 %.bin:%.asm
@@ -168,6 +169,13 @@ $(BUILD)/buildin_cmd.o: she/buildin_cmd.c she/buildin_cmd.h
 
 $(BUILD)/exec.o: userprog/exec.c userprog/exec.h
 	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/wait_exit.o: userprog/wait_exit.c userprog/wait_exit.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/pipe.o:she/pipe.c she/pipe.h
+	$(CC) $(CFLAGS) $< -o $@
+
 
 ################ 链接所有目标文件 ###################
 $(BUILD)/kernel.bin: $(OBJS_O)

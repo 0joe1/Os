@@ -18,7 +18,14 @@ Bool ioq_empty(struct ioqueue* ioq) {
     return (ioq->head == ioq->tail);
 }
 Bool ioq_full(struct ioqueue* ioq) {
-    return (next_pos(ioq->tail) == ioq->head);
+    return (next_pos(ioq->head) == ioq->tail);
+}
+
+uint_32 ioq_len(struct ioqueue* ioq) {
+    if (ioq->head >= ioq->tail)
+        return ioq->head-ioq->tail;
+    else
+        return (BUFSIZE - (ioq->head - ioq->tail));
 }
 
 static void ioq_wait(struct task_struct** waiter)

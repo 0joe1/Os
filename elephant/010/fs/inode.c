@@ -50,7 +50,7 @@ struct inode_position get_ipos(struct partition* part,uint_32 ino)
     uint_32 lba_off = ino*sizeof(struct inode)/BYTES_PER_SECTOR;
     i_pos.start_lba = sb->inode_array_lba + lba_off;
     i_pos.byte_offset = ino*sizeof(struct inode) - lba_off*BYTES_PER_SECTOR;
-    i_pos.two_sec = (BYTES_PER_SECTOR < i_pos.byte_offset+sizeof(struct inode));
+    i_pos.two_sec = (BYTES_PER_SECTOR < (i_pos.byte_offset+sizeof(struct inode)));
     return i_pos;
 }
 
@@ -139,7 +139,7 @@ void inode_release(struct partition* part,uint_32 ino)
     for (uint_32 blk = 0 ; blk < blk_cnt ; blk++)
     {
         if (all_blocks[blk] == 0) continue;
-        btmp_idx = inode->block[blk] - part->sb->data_start_lba;
+        btmp_idx = all_blocks[blk] - part->sb->data_start_lba;
         bitmap_set(&part->block_bitmap,btmp_idx,0);
         sync_bitmap(part,btmp_idx,BLOCK_BITMAP);
     }

@@ -3,6 +3,7 @@
     - -I../kernel
     - -I../lib
     - -I../lib/kernel
+    - -I../lib/usr
     - -I../device
     - -I../userprog
     - -I../thread

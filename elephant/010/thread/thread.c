@@ -11,26 +11,72 @@
 #include "fork.h"
 #include "stdio.h"
 #include "fs.h"
+#include "syscall.h"
 
 #define MAIN_THREAD_PRIO 31
+#define MAXPID 1024
 
 extern void init(void);
 
 struct list thread_ready_list;
 struct list all_thread_list;
 
-struct lock pid_lock;
-pid_t sys_pid;
-
 struct task_struct* idle_pcb;
+struct task_struct* main_pcb;
+
+char pid_btmp[MAXPID/8];
+struct pid_pool {
+    struct bitmap btmp;
+    pid_t pid_begin;
+    struct lock lock;
+};
+
+struct pid_pool pid_pool;
+
+void pid_pool_init(void)
+{
+    pid_pool.pid_begin = 1;
+    pid_pool.btmp.map_size = MAXPID/8;
+    pid_pool.btmp.bits = (uint_8*)pid_btmp;
+    bit_init(&pid_pool.btmp);
+    lock_init(&pid_pool.lock);
+}
 
 static void asign_pid(struct task_struct* pcb)
 {
-    lock_acquire(&pid_lock);
-    sys_pid++;
-    pcb->pid = sys_pid;
-    lock_release(&pid_lock);
+    lock_acquire(&pid_pool.lock);
+    int idx = bit_scan(&pid_pool.btmp,1);
+    pcb->pid = pid_pool.pid_begin + idx;
+    bitmap_set(&pid_pool.btmp,idx,1);
+    lock_release(&pid_pool.lock);
 }
+
+static void release_pid(struct task_struct* pcb)
+{
+    lock_acquire(&pid_pool.lock);
+    int idx = pcb->pid - pid_pool.pid_begin;
+    bitmap_set(&pid_pool.btmp,idx,0);
+    lock_release(&pid_pool.lock);
+}
+
+static Bool checkpid(struct list_elm* pelm,pid_t pid)
+{
+    struct task_struct* pcb = mem2entry(struct task_struct,pelm,all_list_tag);
+    if (pcb->pid == pid) {
+        return true;
+    }
+    return false;
+}
+
+struct task_struct* pid2thread(pid_t pid)
+{
+    struct list_elm* elm = list_traversal(&all_thread_list,checkpid,pid);
+    if (elm == NULL) {
+        return NULL;
+    }
+    return mem2entry(struct task_struct,elm,all_list_tag);
+}
+
 void fork_pid(struct task_struct* pcb){
     asign_pid(pcb);
 }
@@ -93,7 +139,6 @@ void schedule(void)
 {
     ASSERT(get_intr_status() == INTR_OFF)
     struct task_struct* cur = running_thread();
-    ASSERT(elem_find(&all_thread_list,&cur->all_list_tag));
     if (cur->ticks == 0)
     {
         ASSERT(!elem_find(&thread_ready_list,&cur->wait_tag));
@@ -112,7 +157,7 @@ void schedule(void)
 
 void make_main_thread()
 {
-    struct task_struct* main_pcb = running_thread();
+    main_pcb = running_thread();
     init_thread(main_pcb,"main_thread",21);
     main_pcb->status = TASK_RUNNING;
     ASSERT(!elem_find(&all_thread_list,&main_pcb->all_list_tag));
@@ -122,7 +167,7 @@ void make_main_thread()
 void thread_init(void)
 {
     put_str("thread init start\n");
-    lock_init(&pid_lock);
+    pid_pool_init();
     list_init(&all_thread_list);
     list_init(&thread_ready_list);
     process_execute("init",init);
@@ -179,6 +224,28 @@ void thread_yield(void)
     intr_set_status(old_status);
 }
 
+void thread_exit(struct task_struct* exit,Bool need_schedule)
+{
+    intr_disable();
+    exit->status = TASK_DIED;
+    if (elem_find(&thread_ready_list,&exit->wait_tag))
+        list_remove(&exit->wait_tag);
+    list_remove(&exit->all_list_tag);
+
+    if (exit->pdir != NULL) {
+        mfree_page(PF_KERNEL,exit->pdir,1);
+    }
+
+    if (exit != main_pcb) {
+        mfree_page(PF_KERNEL,exit,1);
+    }
+
+    release_pid(exit);
+    if (need_schedule) {
+        schedule();
+    }
+}
+
 
 int_32 fdlocal2gloabl(int_32 local_fd)
 {
@@ -203,10 +270,11 @@ void pad_print(char* buf,uint_32 bufsize,void* ptr,char format)
             break;
         case 'x':
             sprintf(buf,"%x",*(uint_32*)ptr);
+            break;
         case 'c':
             sprintf(buf,"%c",*(char*)ptr);
     }
-    sys_write(stdout,buf,bufsize);
+    write(stdout,buf,bufsize);
 }
 
 Bool elm2thread_info(struct list_elm* elm,int arg)

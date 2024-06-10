@@ -66,7 +66,7 @@ char* strchr(const char* str,uint_8 ch)
     assert(str != NULL);
     while(*str) {
         if (*str++ == ch)
-            return (char*)str;
+            return (char*)(--str);
     }
     return NULL;
 }

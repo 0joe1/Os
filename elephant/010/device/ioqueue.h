@@ -4,7 +4,7 @@
 #include "thread.h"
 #include "sync.h"
 
-#define BUFSIZE 64
+#define BUFSIZE 128
 
 struct ioqueue {
     char buf[BUFSIZE];
@@ -18,6 +18,7 @@ struct ioqueue {
 void ioq_init(struct ioqueue* ioq);
 Bool ioq_full(struct ioqueue* ioq);
 Bool ioq_empty(struct ioqueue* ioq);
+uint_32 ioq_len(struct ioqueue* ioq);
 char ioq_getchar(struct ioqueue* ioq);
 void ioq_putchar(struct ioqueue* ioq,char val);
 

@@ -56,6 +56,7 @@ struct mem_block* arena2block(struct arena* arena,uint_32 idx);
 struct arena* block2arena(struct mem_block* blk);
 void* sys_malloc(uint_32 size);
 void remove_pte(void* vaddr);
+void pfree(uint_32 paddr);
 void vfree(enum pool_flag pf,void* vaddr,uint_32 pcnt);
 void mfree_page(enum pool_flag,void* _vaddr,uint_32 pcnt);
 void sys_free(void* ptr);

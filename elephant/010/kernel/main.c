@@ -35,21 +35,11 @@ int prog_a_pid,prog_b_pid;
 int main(void){
     put_str("kernel starting...\n");
     init_all();
-/********************写入应用程序***********************/
-    uint_32 filesize = 12000;
-    struct disk* sda = &channel[0].disk[0];
-    void* program = sys_malloc(14000);
-    ASSERT(program != NULL);
-    ide_read(sda,program,300,DIV_ROUND_UP(filesize,BLOCKSIZE));
-    int_32 fd = open("prog_no_arg",O_CREAT|O_RDWT);
-    ASSERT(fd != -1);
-    sys_write(fd,program,filesize);
-/*******************************************************/
     intr_enable();
 
     cls_screen();
     print_prompt();
-    while(1);
+    thread_exit(running_thread(),true);
     return 0;
 }
 void k_thread1(void* arg)
@@ -79,9 +69,11 @@ void init(void)
     if (retpid == 0) {
         my_shell();
     } else {
-        printf("I am parent %d , my child is %d\n",getpid(),retpid);
-        int a = *(char*)(0xc0000010);
-        while(1);
+        int_32 status;
+        while(1) {
+            int child_pid = wait(&status);
+            printf("init get child %d,status %d",child_pid,status);
+        }
     }
     PANIC("should not be here");
 }

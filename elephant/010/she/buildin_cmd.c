@@ -142,6 +142,7 @@ int_32 buildin_ls(uint_32 argc,char** argv)
         return -1;
     }
     char abs_path[MAX_PATH_LEN];
+    char abs_bak[MAX_PATH_LEN];
     Bool longinfo = false;
     memset(abs_path,0,sizeof(abs_path));
 
@@ -149,8 +150,9 @@ int_32 buildin_ls(uint_32 argc,char** argv)
         if (argv[ag][0] == '-') longinfo=true;
         else make_abs_path(argv[ag],abs_path);
     }
-    if (argc == 1) {
+    if (argc == 1 || (argc==2 && longinfo==true)) {
         memcpy(abs_path,cwd_cache,MAX_PATH_LEN);
+        strcpy(abs_bak,abs_path);
     }
 
     struct stat fstat;
@@ -173,13 +175,15 @@ int_32 buildin_ls(uint_32 argc,char** argv)
         {
             while ((de = readdir(dir)) != NULL)
             {
+                strcat(abs_path,"/");
                 strcat(abs_path,de->filename);
                 stat(abs_path,&fstat);
                 ftype = (fstat.st_ftype==FT_REGULAR?'-':'d');
-                pad_print(buf,16,&ftype,'c');
-                pad_print(buf,16,&fstat.st_ino,'d');
-                pad_print(buf,16,&fstat.st_fsize,'d');
+                pad_print(buf,10,&ftype,'c');
+                pad_print(buf,10,&fstat.st_ino,'d');
+                pad_print(buf,10,&fstat.st_fsize,'d');
                 printf("%s\n",de->filename);
+                strcpy(abs_path,abs_bak);
             }
         }
         else

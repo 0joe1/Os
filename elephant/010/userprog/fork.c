@@ -1,4 +1,5 @@
 #include "fork.h"
+#include "pipe.h"
 #include "memory.h"
 #include "string.h"
 #include "process.h"
@@ -23,6 +24,7 @@ static int_32 copy_pcb(struct task_struct* parent,struct task_struct* child)
     memcpy(child,parent,PAGESIZE);
     child->kstack_p = (uint_32*)((uint_32)child + PAGESIZE);
     fork_pid(child);
+    child->ppid     = parent->pid;
     child->ticks    = parent->priority;
     child->elapsed_ticks = 0;
     child->status   = TASK_READY;
@@ -98,7 +100,11 @@ static int_32 update_inode_openstat(struct task_struct* child)
         if (f->inode == NULL) {
             return -1;
         }
-        f->inode->open_cnts++;
+
+        if (is_pipe(fd))
+            f->fd_pos++;
+        else
+            f->inode->open_cnts++;
     }
     return 0;
 }

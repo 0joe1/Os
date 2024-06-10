@@ -27,7 +27,12 @@ enum SYSCALL {
     SYS_REWINDDIR,
     SYS_STAT,
     SYS_PS,
-    SYS_EXECV
+    SYS_EXECV,
+    SYS_EXIT,
+    SYS_WAIT,
+    SYS_PIPE,
+    SYS_FDREDIRECT,
+    SYS_HELP
 };
 
 uint_32 getpid(void);
@@ -53,5 +58,10 @@ void rewinddir(struct dir* dir);
 int_32 stat(const char* path,struct stat* fstat);
 void ps(void);
 int_32 execv(const char* pathname,char** argv);
+void exit(int_32 status);
+pid_t wait(int_32* status);
+int_32 pipe(int p[]);
+void fd_redirect(uint_32 old_fd,uint_32 new_fd);
+void help(void);
 
 #endif

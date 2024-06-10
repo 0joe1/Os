@@ -106,6 +106,7 @@ int_32 sys_execv(const char* pathname,char** argv)
     make_abs_path((char*)pathname,buf);
     const char* fname = strrchr(buf,'/')+1;
     struct task_struct* cur = running_thread();
+    memset(cur->name,0,20);
     strcpy(cur->name,fname);
 
     struct intr_stack* intr = (struct intr_stack*) \

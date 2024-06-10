@@ -282,7 +282,7 @@ int_32 file_read(struct file* file,void* buf,uint_32 count)
     if ((file->fd_pos + count) >= file->inode->i_size){
         count = file->inode->i_size - file->fd_pos;
         if (count == 0) {
-            printk("read the end of file\n");
+            //printk("read the end of file\n");
             return -1;
         }
     }

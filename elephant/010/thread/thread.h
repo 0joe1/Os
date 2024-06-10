@@ -6,7 +6,7 @@
 
 #define PAGESIZE 4096
 #define KMAGIC 0x54878290  //防止栈破坏信息
-#define MAX_OPEN_FILES_PROC 7
+#define MAX_OPEN_FILES_PROC 20
 
 extern struct list thread_ready_list;
 extern struct list all_thread_list;
@@ -67,6 +67,7 @@ struct task_struct {
     pid_t ppid;
     struct list_elm wait_tag;
     struct list_elm all_list_tag;
+    int_8 exit_status;
     uint_32 ticks;
     uint_32 elapsed_ticks;
     enum task_status status;
@@ -80,6 +81,7 @@ struct task_struct {
 };
 
 static void asign_pid(struct task_struct* pcb);
+struct task_struct* pid2thread(pid_t pid);
 void fork_pid(struct task_struct* pcb);
 void init_thread(struct task_struct* pcb,char* name,uint_32 priority);
 void thread_create(struct task_struct* pcb,thread_func* func,void* arg);
@@ -92,6 +94,7 @@ void thread_block(enum task_status stat);
 void thread_unblock(struct task_struct* pcb);
 void idle(void* arg);
 void thread_yield(void);
+void thread_exit(struct task_struct* exit,Bool need_schedule);
 int_32 fdlocal2gloabl(int_32 local_fd);
 void pad_print(char* buf,uint_32 bufsize,void* ptr,char format);
 Bool elm2thread_info(struct list_elm* elm,int arg);

@@ -1,4 +1,5 @@
 #include "fs.h"
+#include "pipe.h"
 #include "thread.h"
 #include "global.h"
 #include "stdio-kernel.h"
@@ -23,7 +24,7 @@ void fs_format(struct partition* p)
     sb.block_cnt = p->sec_cnt;
     sb.inode_cnt = MFILES_PER_PARTITION;
     sb.part_lba  = p->start_sec;
-    
+
     uint_32 inode_bitmap_len = MFILES_PER_PARTITION/BITS_PER_SECTOR;
     uint_32 inode_array_len = (sizeof(struct inode)*MFILES_PER_PARTITION)/ \
                               BYTES_PER_SECTOR;
@@ -159,7 +160,7 @@ Bool mount_partition(struct list_elm* pt_elm,int arg)
         PANIC("mount_partition alloc memory failed");
     }
     ide_read(pt->hd,cur_part->sb,pt->start_sec+1,1);
-  
+
     struct super_block* sb = cur_part->sb;
     /* block bitmap */
     cur_part->block_bitmap.map_size = sb->block_bitmap_sects*BYTES_PER_SECTOR;
@@ -262,6 +263,10 @@ int_32 search_file(const char* filename,struct path_search_record* record)
     record->p_dir = &root;
     record->ftype = FT_DIRECTORY;
     uint_32 grandfather = record->p_dir->inode->ino;
+    char rootdirbuf[512];
+    memset(rootdirbuf,0,sizeof(rootdirbuf));
+    uint_32 pdirpos = record->p_dir->dir_pos;
+    memcpy(rootdirbuf,root.dir_buf,512);
     subpath = path_parse(subpath,cur_name);
     while (*cur_name)
     {
@@ -286,6 +291,8 @@ int_32 search_file(const char* filename,struct path_search_record* record)
         }
         else if(de.ftype == FT_REGULAR)
         {
+            root.dir_pos = pdirpos;
+            memcpy(root.dir_buf,rootdirbuf,512);
             return de.ino;
         }
         else
@@ -296,6 +303,8 @@ int_32 search_file(const char* filename,struct path_search_record* record)
 
     close_dir(record->p_dir);
     record->p_dir = open_dir(cur_part,grandfather);
+    root.dir_pos = pdirpos;
+    memcpy(root.dir_buf,rootdirbuf,512);
     return de.ino;
 }
 
@@ -323,7 +332,7 @@ int_32 sys_open(const char* filename,uint_8 flag)
     int_32 fd;
     if (exist)
     {
-        printk("file exists,openning now...\n");
+        //printk("file exists,openning now...\n");
         fd = file_open(ino,flag);
     }
     else
@@ -341,11 +350,18 @@ int_32 sys_close(int_32 fd)
 {
     int_32 ret;
     int_32 _fd = fdlocal2gloabl(fd);
-    ret = file_close(&file_table[_fd]);
-    if (fd > 3){
+    if (fd >= 3){
+        if (is_pipe(fd)) {
+            if (--file_table[_fd].fd_pos == 0) {
+                mfree_page(PF_KERNEL,file_table[_fd].inode,1);
+                file_table[_fd].inode = NULL;
+            }
+            ret = 0;
+        }
+        else
+            ret = file_close(&file_table[_fd]);
         struct task_struct* cur = running_thread();
         cur->fd_table[fd] = -1;
-        printk("fd %d closed\n",fd);
     }
     return ret;
 }
@@ -357,10 +373,14 @@ int_32 sys_write(uint_32 fd,const void* buf,uint_32 count)
         printk("can't find file in file table\n");
         return -1;
     }
-    if (fd == stdout) {
+    if (_fd == stdout) {
         char* buffer = (char*)buf;
         console_put_str(buffer);
         return count;
+    }
+
+    if (is_pipe(fd)) {
+        return pipe_write(fd,(char*)buf,count);
     }
 
     struct file* f = &file_table[_fd];
@@ -380,8 +400,9 @@ int_32 sys_read(uint_32 fd,void* buf,uint_32 count)
         return -1;
     }
 
+    uint_32 _fd = fdlocal2gloabl(fd);
     int_32 ret = -1;
-    if (fd == stdin)
+    if (_fd == stdin)
     {
         char* buffer = buf;
         uint_32 bytes_read = 0;
@@ -391,9 +412,12 @@ int_32 sys_read(uint_32 fd,void* buf,uint_32 count)
         }
         ret = count - bytes_read;
     }
+    else if (is_pipe(fd))
+    {
+        pipe_read(fd,buf,count);
+    }
     else
     {
-        uint_32 _fd = fdlocal2gloabl(fd);
         if (_fd == -1) {
             printk("can't find file in file table\n");
             return -1;
@@ -549,6 +573,7 @@ struct dir* sys_opendir(const char* pathname)
 {
     if (pathname[0]=='/' && (pathname[1]==0 || pathname[1]=='.')) {
         // 真是个自欺欺人的简陋实现
+        open_dir(cur_part,0);
         return &root;
     }
     struct path_search_record record;
@@ -695,4 +720,17 @@ int_32 sys_stat(const char* path,struct stat* fstat)
     close_dir(record.p_dir);
     return 0;
 }
-
+void sys_help(void) {
+    printk("buildin commands:\n\
+           ls: show directory or file information\n\
+           cd: change current work directory\n\
+           mkdir: create a directory\n\
+           rmdir: remove a empty directory\n\
+           rm: remove a regular file\n\
+           pwd: show current work directory\n\
+           ps: show process information\n\
+           clear: clear screen\n\
+           shortcut key:\n\
+           ctrl+l: clear screen\n\
+           ctrl+u: clear input\n\n");
+}

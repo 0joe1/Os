@@ -135,3 +135,23 @@ int_32 execv(const char* pathname,char** argv) {
     return _syscall2(SYS_EXECV,pathname,argv);
 }
 
+void exit(int_32 status) {
+    _syscall1(SYS_EXIT,status);
+}
+
+pid_t wait(int_32* status) {
+    return _syscall1(SYS_WAIT,status);
+}
+
+int_32 pipe(int p[]) {
+    return _syscall1(SYS_PIPE,p);
+}
+
+void fd_redirect(uint_32 old_fd,uint_32 new_fd) {
+    _syscall2(SYS_FDREDIRECT,old_fd,new_fd);
+}
+
+void help(void) {
+    _syscall0(SYS_HELP);
+}
+
